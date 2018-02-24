@@ -11,6 +11,6 @@ import java.util.List;
 @SPI(key = ExtConfig.LOADBALANCE, dftValue = "random")
 public interface LoadBalance {
 
-    public <S> S select(List<S> shards, String seed);
+    <S> S select(List<S> shards, String seed);
 
 }

@@ -1,8 +1,8 @@
-package com.github.ltsopensource.autoconfigure;
+package com.github.ltsopensource.configure;
 
-import com.github.ltsopensource.autoconfigure.annotation.ConfigurationProperties;
-import com.github.ltsopensource.autoconfigure.resolver.Resolver;
-import com.github.ltsopensource.autoconfigure.resolver.ResolverUtils;
+import com.github.ltsopensource.configure.annotation.ConfigurationProperties;
+import com.github.ltsopensource.configure.resolver.Resolver;
+import com.github.ltsopensource.configure.resolver.ResolverUtils;
 import com.github.ltsopensource.core.commons.utils.CollectionUtils;
 
 import java.beans.PropertyDescriptor;

@@ -1,12 +1,12 @@
 package com.github.ltsopensource.jobclient.support;
 
-import com.github.ltsopensource.core.commons.concurrent.limiter.RateLimiter;
 import com.github.ltsopensource.core.constant.Constants;
 import com.github.ltsopensource.core.constant.ExtConfig;
 import com.github.ltsopensource.core.domain.Job;
 import com.github.ltsopensource.core.exception.JobSubmitException;
 import com.github.ltsopensource.jobclient.domain.JobClientAppContext;
 import com.github.ltsopensource.jobclient.domain.Response;
+import com.google.common.util.concurrent.RateLimiter;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -19,9 +19,11 @@ import java.util.concurrent.TimeUnit;
 public class JobSubmitProtector {
 
     private int maxQPS;
-    // 用信号量进行过载保护
-    RateLimiter rateLimiter;
+
+    private RateLimiter rateLimiter;
+
     private int acquireTimeout = 100;
+
     private String errorMsg;
 
     public JobSubmitProtector(JobClientAppContext appContext) {

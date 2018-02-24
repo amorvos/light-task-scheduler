@@ -42,6 +42,7 @@ class SqlTemplateImpl implements SqlTemplate {
         }
     }
 
+    @Override
     public void createTable(final String sql) throws SQLException {
         update(sql);
     }

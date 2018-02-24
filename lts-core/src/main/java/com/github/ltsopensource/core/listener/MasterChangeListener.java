@@ -13,6 +13,6 @@ public interface MasterChangeListener {
      * @param master master节点
      * @param isMaster 表示当前节点是不是master节点
      */
-    public void change(Node master, boolean isMaster);
+    void change(Node master, boolean isMaster);
 
 }

@@ -1,4 +1,4 @@
-package com.github.ltsopensource.autoconfigure.annotation;
+package com.github.ltsopensource.configure.annotation;
 
 import java.lang.annotation.*;
 

@@ -1,6 +1,6 @@
 package com.github.ltsopensource.spring;
 
-import com.github.ltsopensource.autoconfigure.PropertiesConfigurationFactory;
+import com.github.ltsopensource.configure.PropertiesConfigurationFactory;
 import com.github.ltsopensource.core.commons.utils.CollectionUtils;
 import com.github.ltsopensource.core.commons.utils.StringUtils;
 import com.github.ltsopensource.core.constant.Level;

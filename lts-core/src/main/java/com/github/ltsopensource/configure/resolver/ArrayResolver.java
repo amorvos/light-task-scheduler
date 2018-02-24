@@ -1,7 +1,7 @@
-package com.github.ltsopensource.autoconfigure.resolver;
+package com.github.ltsopensource.configure.resolver;
 
-import com.github.ltsopensource.autoconfigure.AutoConfigContext;
-import com.github.ltsopensource.autoconfigure.PropertiesConfigurationResolveException;
+import com.github.ltsopensource.configure.AutoConfigContext;
+import com.github.ltsopensource.configure.PropertiesConfigurationResolveException;
 import com.github.ltsopensource.core.commons.utils.PrimitiveTypeUtils;
 import com.github.ltsopensource.core.json.JSON;
 
@@ -20,10 +20,9 @@ public class ArrayResolver extends AbstractResolver {
 
     @Override
     public void resolve(AutoConfigContext context, PropertyDescriptor descriptor, Class<?> propertyType) {
-        Type componentType = propertyType.getComponentType();
         Class componentClass = propertyType.getComponentType();
 
-        final Map<String, String> kvMap = new HashMap<String, String>();
+        final Map<String, String> kvMap = new HashMap<String, String>(16);
 
         doFilter(context, descriptor, new Filter() {
             @Override

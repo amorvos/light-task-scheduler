@@ -11,36 +11,36 @@ import java.util.Set;
  */
 public class PrimitiveTypeUtils {
 
-    private final static Set<Class<?>> primitiveClasses = new HashSet<Class<?>>();
+    private final static Set<Class<?>> PRIMITIVE_CLASSES = new HashSet<Class<?>>();
 
     static {
-        primitiveClasses.add(boolean.class);
-        primitiveClasses.add(byte.class);
-        primitiveClasses.add(short.class);
-        primitiveClasses.add(int.class);
-        primitiveClasses.add(long.class);
-        primitiveClasses.add(float.class);
-        primitiveClasses.add(double.class);
+        PRIMITIVE_CLASSES.add(boolean.class);
+        PRIMITIVE_CLASSES.add(byte.class);
+        PRIMITIVE_CLASSES.add(short.class);
+        PRIMITIVE_CLASSES.add(int.class);
+        PRIMITIVE_CLASSES.add(long.class);
+        PRIMITIVE_CLASSES.add(float.class);
+        PRIMITIVE_CLASSES.add(double.class);
 
-        primitiveClasses.add(Boolean.class);
-        primitiveClasses.add(Byte.class);
-        primitiveClasses.add(Short.class);
-        primitiveClasses.add(Integer.class);
-        primitiveClasses.add(Long.class);
-        primitiveClasses.add(Float.class);
-        primitiveClasses.add(Double.class);
+        PRIMITIVE_CLASSES.add(Boolean.class);
+        PRIMITIVE_CLASSES.add(Byte.class);
+        PRIMITIVE_CLASSES.add(Short.class);
+        PRIMITIVE_CLASSES.add(Integer.class);
+        PRIMITIVE_CLASSES.add(Long.class);
+        PRIMITIVE_CLASSES.add(Float.class);
+        PRIMITIVE_CLASSES.add(Double.class);
 
-        primitiveClasses.add(BigInteger.class);
-        primitiveClasses.add(BigDecimal.class);
-        primitiveClasses.add(String.class);
+        PRIMITIVE_CLASSES.add(BigInteger.class);
+        PRIMITIVE_CLASSES.add(BigDecimal.class);
+        PRIMITIVE_CLASSES.add(String.class);
     }
 
     public static boolean isPrimitiveClass(Class<?> clazz) {
-        return primitiveClasses.contains(clazz);
+        return PRIMITIVE_CLASSES.contains(clazz);
     }
 
     public static boolean isPrimitiveType(Type type) {
-        return primitiveClasses.contains(type);
+        return PRIMITIVE_CLASSES.contains(type);
     }
 
     @SuppressWarnings("unchecked")

@@ -1,4 +1,4 @@
-package com.github.ltsopensource.autoconfigure;
+package com.github.ltsopensource.configure;
 
 /**
  * @author Robert HG (254963746@qq.com) on 4/20/16.

@@ -10,8 +10,8 @@ import java.util.List;
 public class JobAskRequest extends AbstractRemotingCommandBody {
 
 	private static final long serialVersionUID = 1993281575847386175L;
-	
-	List<String> jobIds;
+
+    private List<String> jobIds;
 
     public List<String> getJobIds() {
         return jobIds;

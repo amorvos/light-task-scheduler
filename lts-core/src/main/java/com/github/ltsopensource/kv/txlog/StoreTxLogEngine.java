@@ -204,7 +204,7 @@ public class StoreTxLogEngine<K, V> {
                 byte[] entry = currentTxLog.readEntry(position);
                 int entryLength = entry.length;
                 UnsafeByteArrayInputStream is = new UnsafeByteArrayInputStream(entry);
-                StoreTxLogEntry<K, V> storeTxLogEntry = serializer.deserialize(is, new TypeReference<StoreTxLogEntry<K, V>>() {
+                StoreTxLogEntry<K, V> storeTxLogEntry = serializer.deserialize(is, new TypeReference() {
                 }.getType());
 
                 StoreTxLogCursorEntry<K, V> storeTxLogCursorEntry = new StoreTxLogCursorEntry<K, V>();

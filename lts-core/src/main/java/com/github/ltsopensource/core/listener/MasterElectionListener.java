@@ -3,6 +3,7 @@ package com.github.ltsopensource.core.listener;
 import com.github.ltsopensource.core.AppContext;
 import com.github.ltsopensource.core.cluster.Node;
 import com.github.ltsopensource.core.commons.utils.CollectionUtils;
+import com.google.common.collect.Lists;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,12 +20,13 @@ public class MasterElectionListener implements NodeChangeListener {
         this.appContext = appContext;
     }
 
+    @Override
     public void removeNodes(List<Node> nodes) {
         if (CollectionUtils.isEmpty(nodes)) {
             return;
         }
         // 只需要和当前节点相同的节点类型和组
-        List<Node> groupNodes = new ArrayList<Node>();
+        List<Node> groupNodes = Lists.newArrayList();
         for (Node node : nodes) {
             if (isSameGroup(node)) {
                 groupNodes.add(node);
@@ -35,12 +37,13 @@ public class MasterElectionListener implements NodeChangeListener {
         }
     }
 
+    @Override
     public void addNodes(List<Node> nodes) {
         if (CollectionUtils.isEmpty(nodes)) {
             return;
         }
         // 只需要和当前节点相同的节点类型和组
-        List<Node> groupNodes = new ArrayList<Node>();
+        List<Node> groupNodes = Lists.newArrayList();
         for (Node node : nodes) {
             if (isSameGroup(node)) {
                 groupNodes.add(node);
@@ -53,9 +56,6 @@ public class MasterElectionListener implements NodeChangeListener {
 
     /**
      * 是否和当前节点是相同的GROUP
-     *
-     * @param node
-     * @return
      */
     private boolean isSameGroup(Node node) {
         return node.getNodeType().equals(appContext.getConfig().getNodeType())

@@ -3,12 +3,12 @@ package com.github.ltsopensource.jobtracker.support.cluster;
 
 import com.github.ltsopensource.core.cluster.Node;
 import com.github.ltsopensource.core.cluster.NodeType;
-import com.github.ltsopensource.core.commons.concurrent.ConcurrentHashSet;
 import com.github.ltsopensource.core.logger.Logger;
 import com.github.ltsopensource.core.logger.LoggerFactory;
 import com.github.ltsopensource.jobtracker.channel.ChannelWrapper;
 import com.github.ltsopensource.jobtracker.domain.JobTrackerAppContext;
 import com.github.ltsopensource.jobtracker.domain.TaskTrackerNode;
+import com.google.common.collect.Sets;
 
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -45,7 +45,7 @@ public class TaskTrackerManager {
         Set<TaskTrackerNode> taskTrackerNodes = NODE_MAP.get(node.getGroup());
 
         if (taskTrackerNodes == null) {
-            taskTrackerNodes = new ConcurrentHashSet<TaskTrackerNode>();
+            taskTrackerNodes = Sets.newConcurrentHashSet();
             Set<TaskTrackerNode> oldSet = NODE_MAP.putIfAbsent(node.getGroup(), taskTrackerNodes);
             if (oldSet != null) {
                 taskTrackerNodes = oldSet;

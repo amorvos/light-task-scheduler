@@ -31,6 +31,7 @@ public abstract class AbstractIndexSnapshot<K, V> implements IndexSnapshot<K, V>
         this.executorService = Executors.newSingleThreadScheduledExecutor(new NamedThreadFactory("ltsdb-index-snapshot-service", true));
     }
 
+    @Override
     public void init() throws IOException {
         // 1. load from disk
         loadFromDisk();
@@ -38,16 +39,13 @@ public abstract class AbstractIndexSnapshot<K, V> implements IndexSnapshot<K, V>
         // 2. replay txLog
         replayTxLog();
 
-        future = this.executorService.scheduleWithFixedDelay(new Runnable() {
-                                                                 @Override
-                                                                 public void run() {
-                                                                     try {
-                                                                         snapshot();
-                                                                     } catch (Throwable t) {
-                                                                         LOGGER.error("MemIndexSnapshot snapshot error:" + t.getMessage(), t);
-                                                                     }
-                                                                 }
-                                                             }, storeConfig.getIndexSnapshotInterval(),
+        future = this.executorService.scheduleWithFixedDelay(() -> {
+            try {
+                snapshot();
+            } catch (Throwable t) {
+                LOGGER.error("MemIndexSnapshot snapshot error:" + t.getMessage(), t);
+            }
+        }, storeConfig.getIndexSnapshotInterval(),
                 storeConfig.getIndexSnapshotInterval(), TimeUnit.MILLISECONDS);
     }
 

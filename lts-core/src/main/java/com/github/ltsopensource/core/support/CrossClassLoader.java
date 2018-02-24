@@ -35,15 +35,15 @@ public class CrossClassLoader {
 
         try {
             synchronized (LOCK) {
-                Vector v = (Vector) classes.get(CrossClassLoader.class.getClassLoader().getParent());
-                for (int i = 0; i < v.size(); i++) {
-                    Class o = (Class) v.get(i);
+                Vector vector = (Vector) classes.get(CrossClassLoader.class.getClassLoader().getParent());
+                for (Object obj : vector) {
+                    Class o = (Class) obj;
                     if (classname.equals(o.getName())) {
                         return o;
                     }
                 }
                 Class clazz = CrossClassLoader.class.getClassLoader().loadClass(classname);
-                v.add(clazz);
+                vector.add(clazz);
                 return clazz;
             }
         } catch (Exception e) {

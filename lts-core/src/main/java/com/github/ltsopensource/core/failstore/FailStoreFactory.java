@@ -10,6 +10,6 @@ import com.github.ltsopensource.core.constant.ExtConfig;
 @SPI(key = ExtConfig.FAIL_STORE, dftValue = "leveldb")
 public interface FailStoreFactory {
 
-    public FailStore getFailStore(Config config, String storePath);
+    FailStore getFailStore(Config config, String storePath);
 
 }

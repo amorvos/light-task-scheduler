@@ -128,7 +128,7 @@ public class DataBlockEngine<K, V> {
             byte[] data = dataBlock.readData(index.getFromIndex(), index.getLength());
 
             UnsafeByteArrayInputStream is = new UnsafeByteArrayInputStream(data);
-            DataEntry<K, V> dataEntry = serializer.deserialize(is, new TypeReference<DataEntry<K, V>>() {
+            DataEntry<K, V> dataEntry = serializer.deserialize(is, new TypeReference() {
             }.getType());
 
             return dataEntry.getValue();

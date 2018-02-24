@@ -12,80 +12,77 @@ import java.util.Set;
  */
 public interface JSONObject {
 
-    public int size();
+	int size();
 
-    public boolean isEmpty();
+	boolean isEmpty();
 
-    public boolean containsKey(String key);
+	boolean containsKey(String key);
 
-    public boolean containsValue(Object value);
+	boolean containsValue(Object value);
 
-    public Object get(String key);
+	Object get(String key);
 
-    public JSONObject getJSONObject(String key);
+	JSONObject getJSONObject(String key);
 
-    public JSONArray getJSONArray(String key);
+	JSONArray getJSONArray(String key);
 
-    public <T> T getObject(String key, Class<T> clazz);
+	<T> T getObject(String key, Class<T> clazz);
 
-    public Boolean getBoolean(String key);
+	Boolean getBoolean(String key);
 
-    public byte[] getBytes(String key);
+	byte[] getBytes(String key);
 
-    public boolean getBooleanValue(String key);
+	boolean getBooleanValue(String key);
 
-    public Byte getByte(String key);
+	Byte getByte(String key);
 
-    public byte getByteValue(String key);
+	byte getByteValue(String key);
 
-    public Short getShort(String key);
+	Short getShort(String key);
 
-    public short getShortValue(String key);
+	short getShortValue(String key);
 
-    public Integer getInteger(String key);
+	Integer getInteger(String key);
 
-    public int getIntValue(String key);
+	int getIntValue(String key);
 
-    public Long getLong(String key);
+	Long getLong(String key);
 
-    public long getLongValue(String key);
+	long getLongValue(String key);
 
-    public Float getFloat(String key);
+	Float getFloat(String key);
 
-    public float getFloatValue(String key);
+	float getFloatValue(String key);
 
-    public Double getDouble(String key);
+	Double getDouble(String key);
 
-    public double getDoubleValue(String key);
+	double getDoubleValue(String key);
 
-    public BigDecimal getBigDecimal(String key);
+	BigDecimal getBigDecimal(String key);
 
-    public BigInteger getBigInteger(String key);
+	BigInteger getBigInteger(String key);
 
-    public String getString(String key);
+	String getString(String key);
 
-    public Date getDate(String key);
+	Date getDate(String key);
 
-    public java.sql.Date getSqlDate(String key);
+	java.sql.Date getSqlDate(String key);
 
-    public java.sql.Timestamp getTimestamp(String key);
+	java.sql.Timestamp getTimestamp(String key);
 
-    public Object put(String key, Object value);
+	Object put(String key, Object value);
 
-    public void putAll(Map<? extends String, ? extends Object> m);
+	void putAll(Map<? extends String, ? extends Object> m);
 
-    public void clear();
+	void clear();
 
-    public Object remove(String key);
+	Object remove(String key);
 
-    public Set<String> keySet();
+	Set<String> keySet();
 
-    public Collection<Object> values();
+	Collection<Object> values();
 
-    public Set<Map.Entry<String, Object>> entrySet();
+	Set<Map.Entry<String, Object>> entrySet();
 
-    public String toJSONString();
-
-    public String toString();
-
+	String toJSONString();
 }

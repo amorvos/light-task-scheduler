@@ -1,284 +1,226 @@
 package com.github.ltsopensource.core.cluster;
 
-import com.github.ltsopensource.core.constant.Constants;
-import com.github.ltsopensource.core.json.JSON;
-
 import java.io.Serializable;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.github.ltsopensource.core.constant.Constants;
+import com.google.common.collect.Maps;
+
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
+
 /**
- * @author Robert HG (254963746@qq.com) on 8/20/14.
- *         任务节点配置
+ * @author Robert HG (254963746@qq.com) on 8/20/14. 任务节点配置
  */
+@Setter
+@Getter
+@ToString
 public class Config implements Serializable {
 
-    private static final long serialVersionUID = -8283382582968938472L;
-    // 节点是否可用
-    private boolean available = true;
-    // 应用节点组
-    private String nodeGroup;
-    // 唯一标识
-    private String identity;
-    // 工作线程, 目前只对 TaskTracker 有效
-    private int workThreads;
-    // 节点类型
-    private NodeType nodeType;
-    // 注册中心 地址
-    private String registryAddress;
-    // 远程连接超时时间
-    private int invokeTimeoutMillis;
-    // 监听端口
-    private int listenPort;
-    private String ip;
-    // 任务信息存储路径(譬如TaskTracker反馈任务信息给JobTracker, JobTracker down掉了, 那么存储下来等待JobTracker可用时再发送)
-    private String dataPath;
-    // 集群名字
-    private String clusterName;
+	private static final long serialVersionUID = -8283382582968938472L;
 
-    private volatile transient Map<String, Number> numbers;
+	/**
+	 * 节点是否可用
+	 */
+	private boolean available = true;
 
-    private final Map<String, String> parameters = new HashMap<String, String>();
+	/**
+	 * 应用节点组
+	 */
+	private String nodeGroup;
 
-    // 内部使用
-    private final Map<String, Object> internalData = new ConcurrentHashMap<String, Object>();
+	/**
+	 * 唯一标识
+	 */
+	private String identity;
 
-    public String getClusterName() {
-        return clusterName;
-    }
+	/**
+	 * 工作线程, 目前只对 TaskTracker 有效
+	 */
+	private int workThreads;
 
-    public void setClusterName(String clusterName) {
-        this.clusterName = clusterName;
-    }
+	/**
+	 * 节点类型
+	 */
+	private NodeType nodeType;
 
-    public String getNodeGroup() {
-        return nodeGroup;
-    }
+	/**
+	 * 注册中心, 一般是ZK地址
+	 */
+	private String registryAddress;
 
-    public void setNodeGroup(String nodeGroup) {
-        this.nodeGroup = nodeGroup;
-    }
+	/**
+	 * 远程连接超时时间
+	 */
+	private int invokeTimeoutMillis;
 
-    public String getIdentity() {
-        return identity;
-    }
+	/**
+	 * 监听端口
+	 */
+	private int listenPort;
 
-    public void setIdentity(String identity) {
-        this.identity = identity;
-    }
+	private String ip;
 
-    public int getWorkThreads() {
-        return workThreads;
-    }
+	/**
+	 * 任务信息存储路径(譬如TaskTracker反馈任务信息给JobTracker, JobTracker down掉了,
+	 * 那么存储下来等待JobTracker可用时再发送)
+	 */
+	private String dataPath;
 
-    public void setWorkThreads(int workThreads) {
-        this.workThreads = workThreads;
-    }
+	/**
+	 * 集群名字
+	 */
+	private String clusterName;
 
-    public NodeType getNodeType() {
-        return nodeType;
-    }
+	private volatile transient Map<String, Number> numbers;
 
-    public void setNodeType(NodeType nodeType) {
-        this.nodeType = nodeType;
-    }
+	private final Map<String, String> parameters = Maps.newHashMap();
 
-    public String getRegistryAddress() {
-        return registryAddress;
-    }
+	/**
+	 * 内部使用
+	 */
+	private final Map<String, Object> internalData = Maps.newConcurrentMap();
 
-    public void setRegistryAddress(String registryAddress) {
-        this.registryAddress = registryAddress;
-    }
+	public void setParameter(String key, String value) {
+		parameters.put(key, value);
+	}
 
-    public int getInvokeTimeoutMillis() {
-        return invokeTimeoutMillis;
-    }
+	public String getParameter(String key) {
+		return parameters.get(key);
+	}
 
-    public void setInvokeTimeoutMillis(int invokeTimeoutMillis) {
-        this.invokeTimeoutMillis = invokeTimeoutMillis;
-    }
+	public String getParameter(String key, String defaultValue) {
+		String value = parameters.get(key);
+		if (value == null) {
+			return defaultValue;
+		}
+		return value;
+	}
 
-    public int getListenPort() {
-        return listenPort;
-    }
+	private Map<String, Number> getNumbers() {
+		// 允许并发重复创建
+		if (numbers == null) {
+			numbers = new ConcurrentHashMap<String, Number>();
+		}
+		return numbers;
+	}
 
-    public void setListenPort(int listenPort) {
-        this.listenPort = listenPort;
-    }
+	public boolean getParameter(String key, boolean defaultValue) {
+		String value = getParameter(key);
+		if (value == null || value.length() == 0) {
+			return defaultValue;
+		}
+		return Boolean.parseBoolean(value);
+	}
 
-    public String getIp() {
-        return ip;
-    }
+	public int getParameter(String key, int defaultValue) {
+		Number n = getNumbers().get(key);
+		if (n != null) {
+			return n.intValue();
+		}
+		String value = getParameter(key);
+		if (value == null || value.length() == 0) {
+			return defaultValue;
+		}
+		int i = Integer.parseInt(value);
+		getNumbers().put(key, i);
+		return i;
+	}
 
-    public void setIp(String ip) {
-        this.ip = ip;
-    }
+	public String[] getParameter(String key, String[] defaultValue) {
+		String value = getParameter(key);
+		if (value == null || value.length() == 0) {
+			return defaultValue;
+		}
+		return Constants.COMMA_SPLIT_PATTERN.split(value);
+	}
 
-    public String getDataPath() {
-        return dataPath;
-    }
+	public double getParameter(String key, double defaultValue) {
+		Number n = getNumbers().get(key);
+		if (n != null) {
+			return n.doubleValue();
+		}
+		String value = getParameter(key);
+		if (value == null || value.length() == 0) {
+			return defaultValue;
+		}
+		double d = Double.parseDouble(value);
+		getNumbers().put(key, d);
+		return d;
+	}
 
-    public void setDataPath(String dataPath) {
-        this.dataPath = dataPath;
-    }
+	public float getParameter(String key, float defaultValue) {
+		Number n = getNumbers().get(key);
+		if (n != null) {
+			return n.floatValue();
+		}
+		String value = getParameter(key);
+		if (value == null || value.length() == 0) {
+			return defaultValue;
+		}
+		float f = Float.parseFloat(value);
+		getNumbers().put(key, f);
+		return f;
+	}
 
-    public boolean isAvailable() {
-        return available;
-    }
+	public long getParameter(String key, long defaultValue) {
+		Number n = getNumbers().get(key);
+		if (n != null) {
+			return n.longValue();
+		}
+		String value = getParameter(key);
+		if (value == null || value.length() == 0) {
+			return defaultValue;
+		}
+		long l = Long.parseLong(value);
+		getNumbers().put(key, l);
+		return l;
+	}
 
-    public void setAvailable(boolean available) {
-        this.available = available;
-    }
+	public short getParameter(String key, short defaultValue) {
+		Number n = getNumbers().get(key);
+		if (n != null) {
+			return n.shortValue();
+		}
+		String value = getParameter(key);
+		if (value == null || value.length() == 0) {
+			return defaultValue;
+		}
+		short s = Short.parseShort(value);
+		getNumbers().put(key, s);
+		return s;
+	}
 
-    public void setParameter(String key, String value) {
-        parameters.put(key, value);
-    }
+	public byte getParameter(String key, byte defaultValue) {
+		Number n = getNumbers().get(key);
+		if (n != null) {
+			return n.byteValue();
+		}
+		String value = getParameter(key);
+		if (value == null || value.length() == 0) {
+			return defaultValue;
+		}
+		byte b = Byte.parseByte(value);
+		getNumbers().put(key, b);
+		return b;
+	}
 
-    public String getParameter(String key) {
-        return parameters.get(key);
-    }
+	@SuppressWarnings("unchecked")
+	public <T> T getInternalData(String key, T defaultValue) {
+		Object obj = internalData.get(key);
+		if (obj == null) {
+			return defaultValue;
+		}
+		return (T) obj;
+	}
 
-    public String getParameter(String key, String defaultValue) {
-        String value = parameters.get(key);
-        if (value == null) {
-            return defaultValue;
-        }
-        return value;
-    }
+	public <T> T getInternalData(String key) {
+		return getInternalData(key, null);
+	}
 
-    public Map<String, String> getParameters() {
-        return parameters;
-    }
-
-    private Map<String, Number> getNumbers() {
-        if (numbers == null) { // 允许并发重复创建
-            numbers = new ConcurrentHashMap<String, Number>();
-        }
-        return numbers;
-    }
-
-    public boolean getParameter(String key, boolean defaultValue) {
-        String value = getParameter(key);
-        if (value == null || value.length() == 0) {
-            return defaultValue;
-        }
-        return Boolean.parseBoolean(value);
-    }
-
-    public int getParameter(String key, int defaultValue) {
-        Number n = getNumbers().get(key);
-        if (n != null) {
-            return n.intValue();
-        }
-        String value = getParameter(key);
-        if (value == null || value.length() == 0) {
-            return defaultValue;
-        }
-        int i = Integer.parseInt(value);
-        getNumbers().put(key, i);
-        return i;
-    }
-
-    public String[] getParameter(String key, String[] defaultValue) {
-        String value = getParameter(key);
-        if (value == null || value.length() == 0) {
-            return defaultValue;
-        }
-        return Constants.COMMA_SPLIT_PATTERN.split(value);
-    }
-
-    public double getParameter(String key, double defaultValue) {
-        Number n = getNumbers().get(key);
-        if (n != null) {
-            return n.doubleValue();
-        }
-        String value = getParameter(key);
-        if (value == null || value.length() == 0) {
-            return defaultValue;
-        }
-        double d = Double.parseDouble(value);
-        getNumbers().put(key, d);
-        return d;
-    }
-
-    public float getParameter(String key, float defaultValue) {
-        Number n = getNumbers().get(key);
-        if (n != null) {
-            return n.floatValue();
-        }
-        String value = getParameter(key);
-        if (value == null || value.length() == 0) {
-            return defaultValue;
-        }
-        float f = Float.parseFloat(value);
-        getNumbers().put(key, f);
-        return f;
-    }
-
-    public long getParameter(String key, long defaultValue) {
-        Number n = getNumbers().get(key);
-        if (n != null) {
-            return n.longValue();
-        }
-        String value = getParameter(key);
-        if (value == null || value.length() == 0) {
-            return defaultValue;
-        }
-        long l = Long.parseLong(value);
-        getNumbers().put(key, l);
-        return l;
-    }
-
-    public short getParameter(String key, short defaultValue) {
-        Number n = getNumbers().get(key);
-        if (n != null) {
-            return n.shortValue();
-        }
-        String value = getParameter(key);
-        if (value == null || value.length() == 0) {
-            return defaultValue;
-        }
-        short s = Short.parseShort(value);
-        getNumbers().put(key, s);
-        return s;
-    }
-
-    public byte getParameter(String key, byte defaultValue) {
-        Number n = getNumbers().get(key);
-        if (n != null) {
-            return n.byteValue();
-        }
-        String value = getParameter(key);
-        if (value == null || value.length() == 0) {
-            return defaultValue;
-        }
-        byte b = Byte.parseByte(value);
-        getNumbers().put(key, b);
-        return b;
-    }
-
-    @SuppressWarnings("unchecked")
-    public <T> T getInternalData(String key, T defaultValue) {
-        Object obj = internalData.get(key);
-        if (obj == null) {
-            return defaultValue;
-        }
-        return (T) obj;
-    }
-
-    public <T> T getInternalData(String key) {
-        return getInternalData(key, null);
-    }
-
-    public void setInternalData(String key, Object value) {
-        internalData.put(key, value);
-    }
-
-
-    @Override
-    public String toString() {
-        return JSON.toJSONString(this);
-    }
+	public void setInternalData(String key, Object value) {
+		internalData.put(key, value);
+	}
 }

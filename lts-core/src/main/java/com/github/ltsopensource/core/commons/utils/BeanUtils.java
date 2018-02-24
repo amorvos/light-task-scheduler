@@ -1,6 +1,7 @@
 package com.github.ltsopensource.core.commons.utils;
 
 import com.github.ltsopensource.core.exception.LtsRuntimeException;
+import com.google.common.collect.Maps;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -19,11 +20,11 @@ public class BeanUtils {
             if (object == null) {
                 throw new IllegalArgumentException("source object is null");
             }
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            ObjectOutputStream oos = new ObjectOutputStream(baos);
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            ObjectOutputStream oos = new ObjectOutputStream(outputStream);
             oos.writeObject(object);
-            ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
-            ObjectInputStream ois = new ObjectInputStream(bais);
+            ByteArrayInputStream inputStream = new ByteArrayInputStream(outputStream.toByteArray());
+            ObjectInputStream ois = new ObjectInputStream(inputStream);
             return ois.readObject();
         } catch (Exception e) {
             throw new LtsRuntimeException(e.getMessage(), e);
@@ -35,7 +36,7 @@ public class BeanUtils {
             return null;
         }
         int size = CollectionUtils.sizeOf(source);
-        Map<String, String> map = new HashMap<String, String>(size);
+        Map<String, String> map = Maps.newHashMapWithExpectedSize(size);
         for (Map.Entry<String, String> entry : source.entrySet()) {
             map.put(entry.getKey(), entry.getValue());
         }

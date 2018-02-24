@@ -1,17 +1,17 @@
-package com.github.ltsopensource.autoconfigure.resolver;
+package com.github.ltsopensource.configure.resolver;
 
-import com.github.ltsopensource.autoconfigure.AutoConfigContext;
+import com.github.ltsopensource.configure.AutoConfigContext;
+import com.github.ltsopensource.core.commons.utils.PrimitiveTypeUtils;
 
 import java.beans.PropertyDescriptor;
 
 /**
  * @author Robert HG (254963746@qq.com) on 4/20/16.
  */
-public class EnumResolver extends AbstractResolver {
+public class PrimitiveTypeResolver extends AbstractResolver {
 
-    public static final EnumResolver INSTANCE = new EnumResolver();
+    public static final PrimitiveTypeResolver INSTANCE = new PrimitiveTypeResolver();
 
-    @SuppressWarnings("unchecked")
     @Override
     public void resolve(final AutoConfigContext context, final PropertyDescriptor descriptor, final Class<?> propertyType) {
 
@@ -23,10 +23,11 @@ public class EnumResolver extends AbstractResolver {
 
             @Override
             public boolean call(String name, String key, String value) {
-                Object v = Enum.valueOf((Class<Enum>) propertyType, value);
+                Object v = PrimitiveTypeUtils.convert(value, propertyType);
                 writeProperty(context, descriptor, v);
                 return false;
             }
         });
     }
+
 }

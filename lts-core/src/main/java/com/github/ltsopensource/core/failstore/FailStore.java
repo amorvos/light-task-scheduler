@@ -1,28 +1,28 @@
 package com.github.ltsopensource.core.failstore;
 
-import com.github.ltsopensource.core.domain.Pair;
-
 import java.lang.reflect.Type;
 import java.util.List;
+
+import com.github.ltsopensource.core.domain.Pair;
 
 /**
  * Robert HG (254963746@qq.com) on 5/21/15.
  */
 public interface FailStore {
 
-    public String getPath();
+	String getPath();
 
-    public void open() throws FailStoreException;
+	void open() throws FailStoreException;
 
-    public void put(String key, Object value) throws FailStoreException;
+	void put(String key, Object value) throws FailStoreException;
 
-    public void delete(String key) throws FailStoreException;
+	void delete(String key) throws FailStoreException;
 
-    public void delete(List<String> keys) throws FailStoreException;
+	void delete(List<String> keys) throws FailStoreException;
 
-    public <T> List<Pair<String, T>> fetchTop(int size, Type type) throws FailStoreException;
+	<T> List<Pair<String, T>> fetchTop(int size, Type type) throws FailStoreException;
 
-    public void close() throws FailStoreException;
+	void close() throws FailStoreException;
 
-    public void destroy() throws FailStoreException;
+	void destroy() throws FailStoreException;
 }

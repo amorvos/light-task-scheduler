@@ -1,8 +1,7 @@
-package com.github.ltsopensource.autoconfigure;
+package com.github.ltsopensource.configure;
 
-import com.github.ltsopensource.autoconfigure.annotation.ConfigurationProperties;
+import com.github.ltsopensource.configure.annotation.ConfigurationProperties;
 import com.github.ltsopensource.core.cluster.AbstractJobNode;
-import com.github.ltsopensource.core.cluster.Node;
 
 import java.util.List;
 import java.util.Map;

@@ -5,7 +5,6 @@ import com.github.ltsopensource.core.json.TypeReference;
 import org.springframework.util.StringUtils;
 
 import java.beans.PropertyEditorSupport;
-import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -21,7 +20,7 @@ public class MapEditor extends PropertyEditorSupport {
         if (!StringUtils.hasText(text)) {
             setValue(null);
         } else {
-            setValue(JSON.parse(text, new TypeReference<HashMap<String, String>>(){}));
+            setValue(JSON.parse(text, new TypeReference(){}));
         }
     }
 

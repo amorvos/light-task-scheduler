@@ -1,6 +1,6 @@
 package com.github.ltsopensource.jobclient;
 
-import com.github.ltsopensource.autoconfigure.PropertiesConfigurationFactory;
+import com.github.ltsopensource.configure.PropertiesConfigurationFactory;
 import com.github.ltsopensource.core.cluster.AbstractNodeBuilder;
 import com.github.ltsopensource.core.commons.utils.CollectionUtils;
 import com.github.ltsopensource.core.commons.utils.StringUtils;
@@ -22,7 +22,7 @@ public class JobClientBuilder extends AbstractNodeBuilder<JobClient, JobClientBu
     }
 
     @Override
-    protected JobClient build0() {
+    protected JobClient doBuild() {
         JobClientProperties properties = PropertiesConfigurationFactory
                 .createPropertiesConfiguration(JobClientProperties.class, locations);
 

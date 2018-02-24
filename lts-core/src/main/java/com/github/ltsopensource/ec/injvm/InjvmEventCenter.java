@@ -1,6 +1,5 @@
 package com.github.ltsopensource.ec.injvm;
 
-import com.github.ltsopensource.core.commons.concurrent.ConcurrentHashSet;
 import com.github.ltsopensource.core.factory.NamedThreadFactory;
 import com.github.ltsopensource.core.json.JSON;
 import com.github.ltsopensource.core.constant.Constants;
@@ -9,6 +8,7 @@ import com.github.ltsopensource.core.logger.LoggerFactory;
 import com.github.ltsopensource.ec.EventCenter;
 import com.github.ltsopensource.ec.EventInfo;
 import com.github.ltsopensource.ec.EventSubscriber;
+import com.google.common.collect.Sets;
 
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -29,11 +29,12 @@ public class InjvmEventCenter implements EventCenter {
 
     private final ExecutorService executor = Executors.newFixedThreadPool(Constants.AVAILABLE_PROCESSOR * 2, new NamedThreadFactory("LTS-InjvmEventCenter-Executor", true));
 
+    @Override
     public void subscribe(EventSubscriber subscriber, String... topics) {
         for (String topic : topics) {
             Set<EventSubscriber> subscribers = ecMap.get(topic);
             if (subscribers == null) {
-                subscribers = new ConcurrentHashSet<EventSubscriber>();
+                subscribers = Sets.newConcurrentHashSet();
                 Set<EventSubscriber> oldSubscribers = ecMap.putIfAbsent(topic, subscribers);
                 if (oldSubscribers != null) {
                     subscribers = oldSubscribers;
@@ -43,6 +44,7 @@ public class InjvmEventCenter implements EventCenter {
         }
     }
 
+    @Override
     public void unSubscribe(String topic, EventSubscriber subscriber) {
         Set<EventSubscriber> subscribers = ecMap.get(topic);
         if (subscribers != null) {
@@ -54,6 +56,7 @@ public class InjvmEventCenter implements EventCenter {
         }
     }
 
+    @Override
     public void publishSync(EventInfo eventInfo) {
         Set<EventSubscriber> subscribers = ecMap.get(eventInfo.getTopic());
         if (subscribers != null) {
@@ -69,6 +72,7 @@ public class InjvmEventCenter implements EventCenter {
         }
     }
 
+    @Override
     public void publishAsync(final EventInfo eventInfo) {
         executor.submit(new Runnable() {
             @Override

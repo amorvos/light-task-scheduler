@@ -1,4 +1,4 @@
-package com.github.ltsopensource.autoconfigure;
+package com.github.ltsopensource.configure;
 
 import com.github.ltsopensource.core.commons.utils.StringUtils;
 

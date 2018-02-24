@@ -1,10 +1,5 @@
 package com.github.ltsopensource.cmd;
 
-import com.github.ltsopensource.core.constant.Constants;
-import com.github.ltsopensource.core.factory.NamedThreadFactory;
-import com.github.ltsopensource.core.logger.Logger;
-import com.github.ltsopensource.core.logger.LoggerFactory;
-
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.concurrent.ExecutorService;
@@ -12,6 +7,11 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+
+import com.github.ltsopensource.core.constant.Constants;
+import com.github.ltsopensource.core.factory.NamedThreadFactory;
+import com.github.ltsopensource.core.logger.Logger;
+import com.github.ltsopensource.core.logger.LoggerFactory;
 
 /**
  * @author Robert HG (254963746@qq.com)  on 2/17/16.
@@ -44,28 +44,23 @@ public class HttpCmdAcceptor {
 
         if (thread == null) {
             this.thread = new NamedThreadFactory("HTTP-CMD-ACCEPTOR", true).newThread(
-                    new Runnable() {
-                        @Override
-                        public void run() {
-
-                            while (isStarted()) {
+                    () -> {
+                        while (isStarted()) {
+                            try {
+                                Socket socket = serverSocket.accept();
+                                if (socket == null) {
+                                    continue;
+                                }
+                                executorService.submit(new HttpCmdExecutor(context, socket));
+                            } catch (Throwable t) {
+                                LOGGER.error("Accept error ", t);
                                 try {
-                                    Socket socket = serverSocket.accept();
-                                    if (socket == null) {
-                                        continue;
-                                    }
-                                    executorService.submit(new HttpCmdExecutor(context, socket));
-
-                                } catch (Throwable t) {
-                                    LOGGER.error("Accept error ", t);
-                                    try {
-                                        Thread.sleep(1000); // 1s
-                                    } catch (InterruptedException ignored) {
-                                    }
+                                    Thread.sleep(1000);
+                                } catch (InterruptedException ignored) {
                                 }
                             }
-
                         }
+
                     }
             );
         }

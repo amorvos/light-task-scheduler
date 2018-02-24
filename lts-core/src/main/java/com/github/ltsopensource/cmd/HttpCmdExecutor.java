@@ -5,6 +5,7 @@ import com.github.ltsopensource.core.commons.utils.DateUtils;
 import com.github.ltsopensource.core.json.JSON;
 import com.github.ltsopensource.core.logger.Logger;
 import com.github.ltsopensource.core.logger.LoggerFactory;
+import com.google.common.base.Preconditions;
 
 import java.io.*;
 import java.net.Socket;
@@ -17,7 +18,9 @@ import java.util.*;
 public class HttpCmdExecutor implements Runnable {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(HttpCmdExecutor.class);
+
     private HttpCmdContext context;
+
     private Socket socket;
 
     public HttpCmdExecutor(HttpCmdContext context, Socket socket) {
@@ -27,7 +30,6 @@ public class HttpCmdExecutor implements Runnable {
 
     @Override
     public void run() {
-
         try {
             // 解析请求
             HttpCmdRequest request = parseRequest();
@@ -59,18 +61,19 @@ public class HttpCmdExecutor implements Runnable {
         BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream(), "UTF-8"));
 
         StringTokenizer st = new StringTokenizer(in.readLine());
-        if (!st.hasMoreTokens())
+        if (!st.hasMoreTokens()) {
             sendError(HTTP_BADREQUEST, "BAD REQUEST: Syntax error");
+        }
 
         String method = st.nextToken();
-
-        if (!st.hasMoreTokens())
+        if (!st.hasMoreTokens()) {
             sendError(HTTP_BADREQUEST, "BAD REQUEST: Missing URI");
+        }
 
         String uri = st.nextToken();
 
         Properties params = new Properties();
-        assert uri != null;
+        Preconditions.checkNotNull(uri);
         int qmi = uri.indexOf('?');
         if (qmi >= 0) {
             decodeParams(uri.substring(qmi + 1), params);
@@ -96,17 +99,17 @@ public class HttpCmdExecutor implements Runnable {
             if (contentLength != null) {
                 size = Integer.parseInt(contentLength);
             }
-            String postLine = "";
-            char buf[] = new char[512];
-            int read = in.read(buf);
-            while (read >= 0 && size > 0 && !postLine.endsWith("\r\n")) {
+            StringBuilder postLine = new StringBuilder();
+            char[] buffer = new char[512];
+            int read = in.read(buffer);
+            while (read >= 0 && size > 0 && !postLine.toString().endsWith("\r\n")) {
                 size -= read;
-                postLine += String.valueOf(buf, 0, read);
-                if (size > 0)
-                    read = in.read(buf);
+                postLine.append(String.valueOf(buffer, 0, read));
+                if (size > 0) {
+                    read = in.read(buffer);
+                }
             }
-            postLine = postLine.trim();
-            decodeParams(postLine, params);
+            decodeParams(postLine.toString().trim(), params);
         }
         return resolveRequest(uri, params);
     }

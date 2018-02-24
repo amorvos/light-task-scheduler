@@ -25,7 +25,7 @@ public class JSONTest {
         String json = new JSONObject(map).toString();
 
         System.out.println(json);
-        Map<String, Integer> tmap = JSONObject.parseObject(json, new TypeReference<HashMap<String, Integer>>() {
+        Map<String, Integer> tmap = JSONObject.parseObject(json, new TypeReference() {
         }.getType());
         System.out.println(tmap);
     }
@@ -41,7 +41,7 @@ public class JSONTest {
         String json = new JSONObject(job).toString();
         System.out.println(json);
 
-        Job destJob = JSONObject.parseObject(json, new TypeReference<Job>() {
+        Job destJob = JSONObject.parseObject(json, new TypeReference() {
         }.getType());
         System.out.println(destJob);
     }
@@ -56,7 +56,7 @@ public class JSONTest {
         String json = new JSONArray(b).toString();
         System.out.println(json);
 
-        byte[] b2 = JSONObject.parseObject(json, new TypeReference<byte[]>() {
+        byte[] b2 = JSONObject.parseObject(json, new TypeReference() {
         }.getType());
         System.out.println(b2);
     }
@@ -70,7 +70,7 @@ public class JSONTest {
         String json = new JSONObject(result).toString();
         System.out.println(json);
 
-        JobRunResult result2 = JSONObject.parseObject(json, new TypeReference<JobRunResult>() {
+        JobRunResult result2 = JSONObject.parseObject(json, new TypeReference() {
         }.getType());
         System.out.println(result2);
     }
@@ -113,7 +113,7 @@ public class JSONTest {
         long start = System.currentTimeMillis();
 
         for (int i = 0; i < 1000000; i++) {
-            Job job = JSONObject.parseObject(json, new TypeReference<Job>(){}.getType());
+            Job job = JSONObject.parseObject(json, new TypeReference(){}.getType());
         }
         // 7255
         System.out.println(System.currentTimeMillis() - start);
@@ -125,7 +125,7 @@ public class JSONTest {
         long start = System.currentTimeMillis();
 
         for (int i = 0; i < 1000000; i++) {
-            Job job = com.alibaba.fastjson.JSONObject.parseObject(json, new TypeReference<Job>(){}.getType());
+            Job job = com.alibaba.fastjson.JSONObject.parseObject(json, new TypeReference(){}.getType());
         }
         // 4724
         System.out.println(System.currentTimeMillis() - start);

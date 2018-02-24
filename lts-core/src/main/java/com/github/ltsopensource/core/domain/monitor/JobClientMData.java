@@ -1,59 +1,36 @@
 package com.github.ltsopensource.core.domain.monitor;
 
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
 
-/**
- * @author Robert HG (254963746@qq.com) on 3/11/16.
- */
+@Setter
+@Getter
+@ToString
 public class JobClientMData extends MData {
 
-    // 提交成功的个数
-    private Long submitSuccessNum;
-    // 提交失败的个数
-    private Long submitFailedNum;
-    // 存储FailStore的个数
-    private Long failStoreNum;
-    // 提交FailStore的个数
-    private Long submitFailStoreNum;
-    // 处理的反馈的个数
-    private Long handleFeedbackNum;
+	/**
+	 * 提交成功的个数
+	 */
+	private Long submitSuccessNum;
 
-    public Long getSubmitSuccessNum() {
-        return submitSuccessNum;
-    }
+	/**
+	 * 提交失败的个数
+	 */
+	private Long submitFailedNum;
 
-    public void setSubmitSuccessNum(Long submitSuccessNum) {
-        this.submitSuccessNum = submitSuccessNum;
-    }
+	/**
+	 * 存储FailStore的个数
+	 */
+	private Long failStoreNum;
 
-    public Long getSubmitFailedNum() {
-        return submitFailedNum;
-    }
+	/**
+	 * 提交FailStore的个数
+	 */
+	private Long submitFailStoreNum;
 
-    public void setSubmitFailedNum(Long submitFailedNum) {
-        this.submitFailedNum = submitFailedNum;
-    }
-
-    public Long getFailStoreNum() {
-        return failStoreNum;
-    }
-
-    public void setFailStoreNum(Long failStoreNum) {
-        this.failStoreNum = failStoreNum;
-    }
-
-    public Long getSubmitFailStoreNum() {
-        return submitFailStoreNum;
-    }
-
-    public void setSubmitFailStoreNum(Long submitFailStoreNum) {
-        this.submitFailStoreNum = submitFailStoreNum;
-    }
-
-    public Long getHandleFeedbackNum() {
-        return handleFeedbackNum;
-    }
-
-    public void setHandleFeedbackNum(Long handleFeedbackNum) {
-        this.handleFeedbackNum = handleFeedbackNum;
-    }
+	/**
+	 * 处理的反馈的个数
+	 */
+	private Long handleFeedbackNum;
 }

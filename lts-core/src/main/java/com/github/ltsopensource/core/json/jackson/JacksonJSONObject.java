@@ -186,6 +186,7 @@ public class JacksonJSONObject implements JSONObject {
         return castToFloat(value);
     }
 
+    @Override
     public Double getDouble(String key) {
         Object value = get(key);
 
@@ -214,6 +215,7 @@ public class JacksonJSONObject implements JSONObject {
         return castToBigInteger(value);
     }
 
+    @Override
     public String getString(String key) {
         Object value = get(key);
 
@@ -224,6 +226,7 @@ public class JacksonJSONObject implements JSONObject {
         return value.toString();
     }
 
+    @Override
     public Date getDate(String key) {
         Object value = get(key);
 
@@ -236,6 +239,7 @@ public class JacksonJSONObject implements JSONObject {
         return castToSqlDate(value);
     }
 
+    @Override
     public Timestamp getTimestamp(String key) {
         Object value = get(key);
 
@@ -282,6 +286,7 @@ public class JacksonJSONObject implements JSONObject {
         return JSON.toJSONString(map);
     }
 
+    @Override
     public String toString() {
         return toJSONString();
     }

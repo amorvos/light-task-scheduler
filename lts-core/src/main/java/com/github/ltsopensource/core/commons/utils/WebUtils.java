@@ -20,16 +20,26 @@ public class WebUtils {
     private static final String DEFAULT_CHARSET = "UTF-8";
     private static final String METHOD_POST = "POST";
     private static final String METHOD_GET = "GET";
-    private static boolean ignoreSSLCheck = true; // 忽略SSL检查
 
+    /**
+     * 忽略SSL检查
+     */
+    private static boolean ignoreSSLCheck = true;
+
+    /**
+     * SSL证书完全信任
+     */
     private static class TrustAllTrustManager implements X509TrustManager {
+        @Override
         public X509Certificate[] getAcceptedIssuers() {
             return null;
         }
 
+        @Override
         public void checkClientTrusted(X509Certificate[] chain, String authType) throws CertificateException {
         }
 
+        @Override
         public void checkServerTrusted(X509Certificate[] chain, String authType) throws CertificateException {
         }
     }
@@ -71,7 +81,7 @@ public class WebUtils {
         if (query != null) {
             content = query.getBytes(charset);
         }
-        return _doPost(url, ctype, content, connectTimeout, readTimeout, headerMap);
+        return doPost(url, ctype, content, connectTimeout, readTimeout, headerMap);
     }
 
     /**
@@ -83,13 +93,13 @@ public class WebUtils {
      * @return 响应字符串
      */
     public static String doPost(String url, String ctype, byte[] content, int connectTimeout, int readTimeout) throws IOException {
-        return _doPost(url, ctype, content, connectTimeout, readTimeout, null);
+        return doPost(url, ctype, content, connectTimeout, readTimeout, null);
     }
 
-    private static String _doPost(String url, String ctype, byte[] content, int connectTimeout, int readTimeout, Map<String, String> headerMap) throws IOException {
+    private static String doPost(String url, String ctype, byte[] content, int connectTimeout, int readTimeout, Map<String, String> headerMap) throws IOException {
         HttpURLConnection conn = null;
         OutputStream out = null;
-        String rsp = null;
+        String rsp;
         try {
             conn = getConnection(new URL(url), METHOD_POST, ctype, headerMap);
             conn.setRequestProperty("Content-Length", String.valueOf(content.length));
@@ -157,11 +167,7 @@ public class WebUtils {
                     SSLContext ctx = SSLContext.getInstance("TLS");
                     ctx.init(null, new TrustManager[]{new TrustAllTrustManager()}, new SecureRandom());
                     connHttps.setSSLSocketFactory(ctx.getSocketFactory());
-                    connHttps.setHostnameVerifier(new HostnameVerifier() {
-                        public boolean verify(String hostname, SSLSession session) {
-                            return true;
-                        }
-                    });
+                    connHttps.setHostnameVerifier((hostname, session) -> Boolean.TRUE);
                 } catch (Exception e) {
                     throw new IOException(e);
                 }
@@ -205,7 +211,7 @@ public class WebUtils {
         return new URL(strUrl);
     }
 
-    public static String buildQuery(Map<String, String> params, String charset) throws IOException {
+    private static String buildQuery(Map<String, String> params, String charset) throws IOException {
         if (params == null || params.isEmpty()) {
             return null;
         }
@@ -232,7 +238,7 @@ public class WebUtils {
         return query.toString();
     }
 
-    protected static String getResponseAsString(HttpURLConnection conn) throws IOException {
+    private static String getResponseAsString(HttpURLConnection conn) throws IOException {
         String charset = getResponseCharset(conn.getContentType());
         InputStream es = conn.getErrorStream();
         if (es == null) {
@@ -248,7 +254,7 @@ public class WebUtils {
             StringBuilder response = new StringBuilder();
 
             final char[] buff = new char[1024];
-            int read = 0;
+            int read;
             while ((read = reader.read(buff)) > 0) {
                 response.append(buff, 0, read);
             }

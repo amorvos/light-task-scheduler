@@ -2,52 +2,30 @@ package com.github.ltsopensource.cmd;
 
 import java.io.Serializable;
 
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
+
 /**
  * @author Robert HG (254963746@qq.com) on 2/17/16.
  */
+@Setter
+@Getter
+@ToString
 public class HttpCmdResponse implements Serializable {
 
-    private boolean success = false;
-    private String msg;
-    private String code;
-    private String obj;
+	private boolean success = false;
 
-    public boolean isSuccess() {
-        return success;
-    }
+	private String msg;
 
-    public void setSuccess(boolean success) {
-        this.success = success;
-    }
+	private String code;
 
-    public String getMsg() {
-        return msg;
-    }
+	private String obj;
 
-    public void setMsg(String msg) {
-        this.msg = msg;
-    }
-
-    public String getCode() {
-        return code;
-    }
-
-    public void setCode(String code) {
-        this.code = code;
-    }
-
-    public String getObj() {
-        return obj;
-    }
-
-    public void setObj(String obj) {
-        this.obj = obj;
-    }
-
-    public static HttpCmdResponse newResponse(boolean success, String msg) {
-        HttpCmdResponse response = new HttpCmdResponse();
-        response.setSuccess(success);
-        response.setMsg(msg);
-        return response;
-    }
+	public static HttpCmdResponse newResponse(boolean success, String msg) {
+		HttpCmdResponse response = new HttpCmdResponse();
+		response.setSuccess(success);
+		response.setMsg(msg);
+		return response;
+	}
 }

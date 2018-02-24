@@ -1,6 +1,6 @@
 package com.github.ltsopensource.spring.quartz;
 
-import com.github.ltsopensource.autoconfigure.annotation.ConfigurationProperties;
+import com.github.ltsopensource.configure.annotation.ConfigurationProperties;
 import com.github.ltsopensource.core.commons.utils.Assert;
 import com.github.ltsopensource.core.exception.ConfigPropertiesIllegalException;
 import com.github.ltsopensource.core.properties.JobClientProperties;

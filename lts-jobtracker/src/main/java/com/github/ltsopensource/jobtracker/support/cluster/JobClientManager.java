@@ -2,7 +2,6 @@ package com.github.ltsopensource.jobtracker.support.cluster;
 
 import com.github.ltsopensource.core.cluster.Node;
 import com.github.ltsopensource.core.cluster.NodeType;
-import com.github.ltsopensource.core.commons.concurrent.ConcurrentHashSet;
 import com.github.ltsopensource.core.commons.utils.CollectionUtils;
 import com.github.ltsopensource.core.constant.ExtConfig;
 import com.github.ltsopensource.core.loadbalance.LoadBalance;
@@ -12,6 +11,7 @@ import com.github.ltsopensource.core.spi.ServiceLoader;
 import com.github.ltsopensource.jobtracker.channel.ChannelWrapper;
 import com.github.ltsopensource.jobtracker.domain.JobClientNode;
 import com.github.ltsopensource.jobtracker.domain.JobTrackerAppContext;
+import com.google.common.collect.Sets;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -52,7 +52,7 @@ public class JobClientManager {
         Set<JobClientNode> jobClientNodes = NODE_MAP.get(node.getGroup());
 
         if (jobClientNodes == null) {
-            jobClientNodes = new ConcurrentHashSet<JobClientNode>();
+            jobClientNodes = Sets.newConcurrentHashSet();
             Set<JobClientNode> oldSet = NODE_MAP.putIfAbsent(node.getGroup(), jobClientNodes);
             if (oldSet != null) {
                 jobClientNodes = oldSet;

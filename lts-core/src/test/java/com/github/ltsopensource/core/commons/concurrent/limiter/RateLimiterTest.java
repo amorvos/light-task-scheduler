@@ -1,6 +1,7 @@
 package com.github.ltsopensource.core.commons.concurrent.limiter;
 
 
+import com.google.common.util.concurrent.RateLimiter;
 import org.junit.Test;
 
 import java.util.concurrent.atomic.AtomicLong;

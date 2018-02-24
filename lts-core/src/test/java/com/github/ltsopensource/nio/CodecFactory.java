@@ -48,7 +48,7 @@ public class CodecFactory {
             @Override
             protected Object decode(NioChannel channel, byte[] frame) throws Exception {
                 String json = new String(frame, "UTF-8");
-                RemotingMsg msg = JSON.parse(json, new TypeReference<RemotingMsg>() {
+                RemotingMsg msg = JSON.parse(json, new TypeReference() {
                 });
                 return msg;
             }

@@ -66,14 +66,14 @@ public class JacksonJSONAdapter implements JSONAdapter {
 
     @Override
     public JSONArray parseArray(String json) {
-        List<Object> list = parse(json, new TypeReference<List<Object>>() {
+        List<Object> list = parse(json, new TypeReference() {
         }.getType());
         return new JacksonJSONArray(list);
     }
 
     @Override
     public JSONObject parseObject(String json) {
-        Map<String, Object> map = parse(json, new TypeReference<Map<String, Object>>() {
+        Map<String, Object> map = parse(json, new TypeReference() {
         }.getType());
         return new JacksonJSONObject(map);
     }

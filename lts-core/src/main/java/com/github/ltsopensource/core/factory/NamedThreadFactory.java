@@ -8,6 +8,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @author Robert HG (254963746@qq.com) on 5/5/14.
  */
 public class NamedThreadFactory implements ThreadFactory {
+
     private static final AtomicInteger POOL_SEQ = new AtomicInteger(1);
 
     private final AtomicInteger threadNum = new AtomicInteger(1);
@@ -33,6 +34,7 @@ public class NamedThreadFactory implements ThreadFactory {
         group = (s == null) ? Thread.currentThread().getThreadGroup() : s.getThreadGroup();
     }
 
+    @Override
     public Thread newThread(Runnable runnable) {
         String name = prefix + threadNum.getAndIncrement();
         Thread ret = new Thread(group, runnable, name, 0);

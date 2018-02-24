@@ -24,7 +24,7 @@ public class JSON {
         }
     }
 
-    public static final <T> T parse(String json, TypeReference<T> typeReference) {
+    public static final <T> T parse(String json, TypeReference typeReference) {
         try {
             if(StringUtils.isEmpty(json)){
                 return null;

@@ -1,6 +1,6 @@
 package com.github.ltsopensource.jobtracker;
 
-import com.github.ltsopensource.autoconfigure.PropertiesConfigurationFactory;
+import com.github.ltsopensource.configure.PropertiesConfigurationFactory;
 import com.github.ltsopensource.core.cluster.AbstractNodeBuilder;
 import com.github.ltsopensource.core.commons.utils.CollectionUtils;
 import com.github.ltsopensource.core.commons.utils.StringUtils;
@@ -14,7 +14,7 @@ import java.util.Map;
 public class JobTrackerBuilder extends AbstractNodeBuilder<JobTracker, JobTrackerBuilder> {
 
     @Override
-    protected JobTracker build0() {
+    protected JobTracker doBuild() {
         JobTrackerProperties properties = PropertiesConfigurationFactory.createPropertiesConfiguration(JobTrackerProperties.class, locations);
         return buildByProperties(properties);
     }

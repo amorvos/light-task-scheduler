@@ -1,8 +1,8 @@
 package com.github.ltsopensource.core.listener;
 
-import com.github.ltsopensource.core.cluster.Node;
-
 import java.util.List;
+
+import com.github.ltsopensource.core.cluster.Node;
 
 /**
  * @author Robert HG (254963746@qq.com) on 5/18/15.
@@ -14,12 +14,12 @@ public interface NodeChangeListener {
      *
      * @param nodes 节点列表
      */
-    public void addNodes(List<Node> nodes);
+	void addNodes(List<Node> nodes);
 
     /**
      * 移除节点
      * @param nodes 节点列表
      */
-    public void removeNodes(List<Node> nodes);
+	void removeNodes(List<Node> nodes);
 
 }

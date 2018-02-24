@@ -10,11 +10,11 @@ public interface IndexSnapshot<K, V> {
     /**
      * 初始化, 包括从磁盘中加载, 重放事务日志等
      */
-    public void init() throws IOException;
+    void init() throws IOException;
 
     /**
      * 快照
      */
-    public void snapshot() throws IOException;
+    void snapshot() throws IOException;
 
 }

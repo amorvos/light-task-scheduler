@@ -1,6 +1,5 @@
 package com.github.ltsopensource.nio.idle;
 
-import com.github.ltsopensource.core.commons.concurrent.ConcurrentHashSet;
 import com.github.ltsopensource.core.support.SystemClock;
 import com.github.ltsopensource.nio.channel.NioChannel;
 import com.github.ltsopensource.nio.channel.NioChannelImpl;
@@ -8,13 +7,16 @@ import com.github.ltsopensource.nio.config.NioConfig;
 import com.github.ltsopensource.nio.handler.Futures;
 import com.github.ltsopensource.nio.handler.IoFutureListener;
 import com.github.ltsopensource.remoting.Future;
+import com.google.common.collect.Sets;
+
+import java.util.Set;
 
 /**
  * @author Robert HG (254963746@qq.com) on 1/24/16.
  */
 public class IdleDetector {
 
-    private final ConcurrentHashSet<NioChannel> channels = new ConcurrentHashSet<NioChannel>();
+    private final Set<NioChannel> channels = Sets.newConcurrentHashSet();
 
     public void addChannel(NioChannel channel) {
         channels.add(channel);

@@ -3,195 +3,56 @@ package com.github.ltsopensource.admin.request;
 import java.util.Date;
 import java.util.Map;
 
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
+
 /**
  * @author Robert HG (254963746@qq.com) on 6/6/15.
  */
+@Setter
+@Getter
+@ToString
 public class JobQueueReq extends PaginationReq {
 
-    // ------------ 下面是查询条件值 ---------------
-    private String jobId;
-    private String jobType;
-    private String taskId;
-    private String realTaskId;
+	// ------------ 下面是查询条件值 ---------------
+	private String jobId;
 
-    private String submitNodeGroup;
+	private String jobType;
 
-    private String taskTrackerNodeGroup;
+	private String taskId;
 
-    private Date startGmtCreated;
-    private Date endGmtCreated;
-    private Date startGmtModified;
-    private Date endGmtModified;
+	private String realTaskId;
 
-    // ------------ 下面是能update的值 -------------------
+	private String submitNodeGroup;
 
-    private String cronExpression;
+	private String taskTrackerNodeGroup;
 
-    private Boolean needFeedback;
+	private Date startGmtCreated;
 
-    private Map<String, String> extParams;
+	private Date endGmtCreated;
 
-    private Date triggerTime;
+	private Date startGmtModified;
 
-    private Integer priority;
+	private Date endGmtModified;
 
-    private Integer maxRetryTimes;
+	// ------------ 下面是能update的值 -------------------
 
-    private Integer repeatCount;
+	private String cronExpression;
 
-    private Long repeatInterval;
+	private Boolean needFeedback;
 
-    private Boolean relyOnPrevCycle;
+	private Map<String, String> extParams;
 
-    public String getJobType() {
-        return jobType;
-    }
+	private Date triggerTime;
 
-    public void setJobType(String jobType) {
-        this.jobType = jobType;
-    }
+	private Integer priority;
 
-    public String getJobId() {
-        return jobId;
-    }
+	private Integer maxRetryTimes;
 
-    public void setJobId(String jobId) {
-        this.jobId = jobId;
-    }
+	private Integer repeatCount;
 
-    public String getTaskId() {
-        return taskId;
-    }
+	private Long repeatInterval;
 
-    public void setTaskId(String taskId) {
-        this.taskId = taskId;
-    }
-
-    public String getSubmitNodeGroup() {
-        return submitNodeGroup;
-    }
-
-    public void setSubmitNodeGroup(String submitNodeGroup) {
-        this.submitNodeGroup = submitNodeGroup;
-    }
-
-    public String getTaskTrackerNodeGroup() {
-        return taskTrackerNodeGroup;
-    }
-
-    public void setTaskTrackerNodeGroup(String taskTrackerNodeGroup) {
-        this.taskTrackerNodeGroup = taskTrackerNodeGroup;
-    }
-
-    public String getCronExpression() {
-        return cronExpression;
-    }
-
-    public void setCronExpression(String cronExpression) {
-        this.cronExpression = cronExpression;
-    }
-
-    public Boolean getNeedFeedback() {
-        return needFeedback;
-    }
-
-    public void setNeedFeedback(Boolean needFeedback) {
-        this.needFeedback = needFeedback;
-    }
-
-    public Map<String, String> getExtParams() {
-        return extParams;
-    }
-
-    public void setExtParams(Map<String, String> extParams) {
-        this.extParams = extParams;
-    }
-
-    public Integer getPriority() {
-        return priority;
-    }
-
-    public void setPriority(Integer priority) {
-        this.priority = priority;
-    }
-
-    public Date getStartGmtCreated() {
-        return startGmtCreated;
-    }
-
-    public void setStartGmtCreated(Date startGmtCreated) {
-        this.startGmtCreated = startGmtCreated;
-    }
-
-    public Date getEndGmtCreated() {
-        return endGmtCreated;
-    }
-
-    public void setEndGmtCreated(Date endGmtCreated) {
-        this.endGmtCreated = endGmtCreated;
-    }
-
-    public Date getStartGmtModified() {
-        return startGmtModified;
-    }
-
-    public void setStartGmtModified(Date startGmtModified) {
-        this.startGmtModified = startGmtModified;
-    }
-
-    public Date getEndGmtModified() {
-        return endGmtModified;
-    }
-
-    public void setEndGmtModified(Date endGmtModified) {
-        this.endGmtModified = endGmtModified;
-    }
-
-    public Date getTriggerTime() {
-        return triggerTime;
-    }
-
-    public void setTriggerTime(Date triggerTime) {
-        this.triggerTime = triggerTime;
-    }
-
-    public Integer getMaxRetryTimes() {
-        return maxRetryTimes;
-    }
-
-    public void setMaxRetryTimes(Integer maxRetryTimes) {
-        this.maxRetryTimes = maxRetryTimes;
-    }
-
-    public Integer getRepeatCount() {
-        return repeatCount;
-    }
-
-    public void setRepeatCount(Integer repeatCount) {
-        this.repeatCount = repeatCount;
-    }
-
-    public Long getRepeatInterval() {
-        return repeatInterval;
-    }
-
-    public void setRepeatInterval(Long repeatInterval) {
-        this.repeatInterval = repeatInterval;
-    }
-
-    public Boolean getRelyOnPrevCycle() {
-        return relyOnPrevCycle;
-    }
-
-    public void setRelyOnPrevCycle(Boolean relyOnPrevCycle) {
-        this.relyOnPrevCycle = relyOnPrevCycle;
-    }
-
-    public String getRealTaskId() {
-        return realTaskId;
-    }
-
-    public void setRealTaskId(String realTaskId) {
-        this.realTaskId = realTaskId;
-    }
+	private Boolean relyOnPrevCycle;
 }

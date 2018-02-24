@@ -1,15 +1,16 @@
 package com.github.ltsopensource.core.failstore;
 
-import com.github.ltsopensource.core.commons.file.FileLock;
-import com.github.ltsopensource.core.commons.file.FileUtils;
-import com.github.ltsopensource.core.logger.Logger;
-import com.github.ltsopensource.core.logger.LoggerFactory;
-
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.List;
+
+import com.github.ltsopensource.core.commons.file.FileLock;
+import com.github.ltsopensource.core.commons.file.FileUtils;
+import com.github.ltsopensource.core.logger.Logger;
+import com.github.ltsopensource.core.logger.LoggerFactory;
+import com.google.common.collect.Lists;
 
 /**
  * Robert HG (254963746@qq.com) on 7/5/15.
@@ -43,7 +44,7 @@ public abstract class AbstractFailStore implements FailStore {
         FileUtils.createDirIfNotExist(failStorePath);
         // 有可能两个进程同时创建这个目录，所以用文件锁来得到控制权
         fileLock = new FileLock(failStorePath.concat("/").concat(dbLockName));
-        boolean locked = fileLock.tryLock();    // 1s
+        boolean locked = fileLock.tryLock();
         if (!locked) {
             throw new IllegalStateException("can not get current file lock.");
         }
@@ -54,30 +55,33 @@ public abstract class AbstractFailStore implements FailStore {
     public List<FailStore> getDeadFailStores() {
         File homeDir = new File(home);
         File[] subFiles = homeDir.listFiles();
-        List<FailStore> deadFailStores = new ArrayList<FailStore>();
-        if (subFiles != null && subFiles.length != 0) {
-            for (File subFile : subFiles) {
-                try {
-                    if (subFile.isDirectory()) {
-                        FileLock tmpLock = new FileLock(subFile.getPath().concat("/").concat(dbLockName));
-                        boolean locked = tmpLock.tryLock();
-                        if (locked) {
-                            // 能获得锁，说明这个目录锁对应的节点已经down了
-                            FailStore failStore = getFailStore(subFile);
-                            if (failStore != null) {
-                                deadFailStores.add(failStore);
-                            }
-                            tmpLock.release();
-                        }
-                    }
-                } catch (Exception e) {
-                    // ignore
-                    LOGGER.error(e.getMessage(), e);
-                }
-            }
-        }
-        return deadFailStores;
-    }
+        List<FailStore> deadFailStores = Lists.newArrayList();
+        if (subFiles == null || subFiles.length == 0) {
+            return deadFailStores;
+		}
+		for (File subFile : subFiles) {
+			try {
+				if (!subFile.isDirectory()) {
+					continue;
+				}
+				FileLock tmpLock = new FileLock(subFile.getPath().concat("/").concat(dbLockName));
+				boolean locked = tmpLock.tryLock();
+				if (!locked) {
+					continue;
+				}
+				// 能获得锁，说明这个目录锁对应的节点已经down了
+				FailStore failStore = getFailStore(subFile);
+				if (failStore != null) {
+					deadFailStores.add(failStore);
+				}
+				tmpLock.release();
+			} catch (Exception e) {
+				// ignore
+				LOGGER.error(e.getMessage(), e);
+			}
+		}
+		return deadFailStores;
+	}
 
     private FailStore getFailStore(File dbPath) {
         try {

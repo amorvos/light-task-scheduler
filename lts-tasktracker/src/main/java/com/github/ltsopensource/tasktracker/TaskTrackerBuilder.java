@@ -1,6 +1,6 @@
 package com.github.ltsopensource.tasktracker;
 
-import com.github.ltsopensource.autoconfigure.PropertiesConfigurationFactory;
+import com.github.ltsopensource.configure.PropertiesConfigurationFactory;
 import com.github.ltsopensource.core.cluster.AbstractNodeBuilder;
 import com.github.ltsopensource.core.commons.utils.CollectionUtils;
 import com.github.ltsopensource.core.commons.utils.StringUtils;
@@ -15,7 +15,7 @@ import java.util.Map;
 public class TaskTrackerBuilder extends AbstractNodeBuilder<TaskTracker, TaskTrackerBuilder> {
 
     @Override
-    protected TaskTracker build0() {
+    protected TaskTracker doBuild() {
 
         TaskTrackerProperties properties = PropertiesConfigurationFactory.createPropertiesConfiguration(TaskTrackerProperties.class, locations);
         return buildByProperties(properties);

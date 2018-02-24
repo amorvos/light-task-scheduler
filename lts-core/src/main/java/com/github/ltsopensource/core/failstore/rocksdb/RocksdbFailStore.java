@@ -2,10 +2,12 @@ package com.github.ltsopensource.core.failstore.rocksdb;
 
 import com.github.ltsopensource.core.commons.file.FileUtils;
 import com.github.ltsopensource.core.commons.utils.CollectionUtils;
+import com.github.ltsopensource.core.commons.utils.StringUtils;
 import com.github.ltsopensource.core.domain.Pair;
 import com.github.ltsopensource.core.failstore.AbstractFailStore;
 import com.github.ltsopensource.core.failstore.FailStoreException;
 import com.github.ltsopensource.core.json.JSON;
+import com.google.common.base.Strings;
 import org.rocksdb.*;
 import org.rocksdb.util.SizeUnit;
 
@@ -74,6 +76,9 @@ public class RocksdbFailStore extends AbstractFailStore {
     @Override
     public void put(String key, Object value) throws FailStoreException {
         String valueString = JSON.toJSONString(value);
+        if (null == valueString) {
+            valueString = StringUtils.EMPTY_STR;
+        }
         WriteOptions writeOpts = new WriteOptions();
         try {
             writeOpts.setSync(true);

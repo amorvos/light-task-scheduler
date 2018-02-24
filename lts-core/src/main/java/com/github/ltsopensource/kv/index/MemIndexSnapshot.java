@@ -67,7 +67,7 @@ public class MemIndexSnapshot<K, V> extends AbstractIndexSnapshot<K, V> {
                     UnsafeByteArrayInputStream is = new UnsafeByteArrayInputStream(os.toByteArray());
 
                     indexMap = serializer.deserialize(is,
-                            new TypeReference<ConcurrentSkipListMap<K, IndexItem<K>>>() {
+                            new TypeReference() {
                             }.getType());
                 }
 

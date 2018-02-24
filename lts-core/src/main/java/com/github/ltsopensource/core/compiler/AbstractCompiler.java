@@ -12,6 +12,14 @@ import java.util.regex.Pattern;
  */
 public abstract class AbstractCompiler implements Compiler {
 
+    private static final Pattern PACKAGE_PATTERN = Pattern.compile("package\\s+([$_a-zA-Z][$_a-zA-Z0-9\\.]*);");
+
+    private static final Pattern CLASS_PATTERN = Pattern.compile("class\\s+([$_a-zA-Z][$_a-zA-Z0-9]*)\\s+");
+
+    private static final String JAVASSIST = "javassist";
+
+    private static final String JDK = "jdk";
+
     private static Compiler COMPILER;
 
     public static void setCompiler(Compiler compiler) {
@@ -29,19 +37,16 @@ public abstract class AbstractCompiler implements Compiler {
     }
 
     public static void setCompiler(String compiler) {
-        if ("javassist".equals(compiler)) {
+        if (JAVASSIST.equals(compiler.toLowerCase())) {
             setCompiler(new JavassistCompiler());
-        } else if ("jdk".equals(compiler)) {
+        } else if (JDK.equals(compiler.toLowerCase())) {
             setCompiler(new JdkCompiler());
         } else {
             throw new IllegalArgumentException("compiler[" + compiler + "] error ");
         }
     }
 
-    private static final Pattern PACKAGE_PATTERN = Pattern.compile("package\\s+([$_a-zA-Z][$_a-zA-Z0-9\\.]*);");
-
-    private static final Pattern CLASS_PATTERN = Pattern.compile("class\\s+([$_a-zA-Z][$_a-zA-Z0-9]*)\\s+");
-
+    @Override
     public Class<?> compile(String code) {
         code = code.trim();
         Matcher matcher = PACKAGE_PATTERN.matcher(code);

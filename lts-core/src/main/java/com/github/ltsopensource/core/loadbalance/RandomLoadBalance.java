@@ -1,8 +1,8 @@
 package com.github.ltsopensource.core.loadbalance;
 
-import com.github.ltsopensource.core.commons.concurrent.ThreadLocalRandom;
 
 import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * 随机负载均衡算法

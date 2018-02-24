@@ -1,59 +1,21 @@
 package com.github.ltsopensource.core.domain.monitor;
 
-/**
- * TaskTracker Monitor Info(MI)
- *
- * @author Robert HG (254963746@qq.com) on 8/21/15.
- */
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
+
+@Setter
+@Getter
+@ToString
 public class TaskTrackerMData extends MData {
 
-    private Long exeSuccessNum;
-    private Long exeFailedNum;
-    private Long exeLaterNum;
-    private Long exeExceptionNum;
-    /**
-     * 总的运行时间
-     */
-    private Long totalRunningTime;
+	private Long exeSuccessNum;
 
-    public Long getExeSuccessNum() {
-        return exeSuccessNum;
-    }
+	private Long exeFailedNum;
 
-    public void setExeSuccessNum(Long exeSuccessNum) {
-        this.exeSuccessNum = exeSuccessNum;
-    }
+	private Long exeLaterNum;
 
-    public Long getExeFailedNum() {
-        return exeFailedNum;
-    }
+	private Long exeExceptionNum;
 
-    public void setExeFailedNum(Long exeFailedNum) {
-        this.exeFailedNum = exeFailedNum;
-    }
-
-    public Long getExeLaterNum() {
-        return exeLaterNum;
-    }
-
-    public void setExeLaterNum(Long exeLaterNum) {
-        this.exeLaterNum = exeLaterNum;
-    }
-
-    public Long getExeExceptionNum() {
-        return exeExceptionNum;
-    }
-
-    public void setExeExceptionNum(Long exeExceptionNum) {
-        this.exeExceptionNum = exeExceptionNum;
-    }
-
-    public Long getTotalRunningTime() {
-        return totalRunningTime;
-    }
-
-    public void setTotalRunningTime(Long totalRunningTime) {
-        this.totalRunningTime = totalRunningTime;
-    }
-
+	private Long totalRunningTime;
 }

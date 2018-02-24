@@ -97,8 +97,6 @@ public class FileUtils {
             writer = new OutputStreamWriter(new FileOutputStream(file, append), charset);
             writer.append(charSequence);
             writer.flush();
-        } catch (FileNotFoundException e) {
-            throw new RuntimeException(e);
         } catch (IOException e) {
             throw new RuntimeException(e);
         } finally {

@@ -10,7 +10,7 @@
             <li>
                 <a href="${contextPath}/index.htm">
                     <i class="fa fa-th"></i> <span class="nav-label">首页</span>
-                    <span class="label label-info pull-right">推荐</span></a>
+                </a>
             </li>
             <li>
                 <a href="#"><i class="fa fa-server"></i> <span class="nav-label">节点管理</span><span class="fa arrow"></span></a>

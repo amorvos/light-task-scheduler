@@ -1,12 +1,12 @@
 package com.github.ltsopensource.cmd;
 
-import com.github.ltsopensource.core.logger.Logger;
-import com.github.ltsopensource.core.logger.LoggerFactory;
-
 import java.io.IOException;
 import java.net.BindException;
 import java.net.ServerSocket;
 import java.util.concurrent.atomic.AtomicBoolean;
+
+import com.github.ltsopensource.core.logger.Logger;
+import com.github.ltsopensource.core.logger.LoggerFactory;
 
 /**
  * 主要用于 curl
@@ -30,24 +30,24 @@ public class HttpCmdServer {
         this.context = new HttpCmdContext();
     }
 
-    public void start() throws HttpCmdException {
-        try {
-            if (start.compareAndSet(false, true)) {
-                // 开启监听命令
-                acceptor = new HttpCmdAcceptor(getServerSocket(), context);
-                acceptor.start();
-                LOGGER.info("\n===========================================================================================\n" +
-                        "Start succeed at port {}\n" +
-                        "===========================================================================================", port);
-            }
-        } catch (Exception t) {
-            LOGGER.error("Start error at port {}", port, t);
-            throw new HttpCmdException(t);
-        }
-    }
+	public void start() throws HttpCmdException {
+		try {
+			if (start.compareAndSet(false, true)) {
+				// 开启监听命令
+				acceptor = new HttpCmdAcceptor(getServerSocket(), context);
+				acceptor.start();
+				LOGGER.info("===========================================================");
+				LOGGER.info("Start succeed at port {}", port);
+				LOGGER.info("===========================================================");
+			}
+		} catch (Exception t) {
+			LOGGER.error("Start error at port {}", port, t);
+			throw new HttpCmdException(t);
+		}
+	}
 
     private ServerSocket getServerSocket() throws IOException {
-        ServerSocket serverSocket = null;
+        ServerSocket serverSocket;
         try {
             serverSocket = new ServerSocket(port, 100);
             serverSocket.setReuseAddress(true);

@@ -6,7 +6,8 @@ package com.github.ltsopensource.core.commons.utils;
 public class SystemPropertyUtils {
 
     private static boolean enableDotLog;
-    private static boolean enablePeriod = false;
+
+    private static boolean enablePeriod;
 
     static {
         enableDotLog = "true".equals(System.getProperty("enableDotLog"));

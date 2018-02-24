@@ -18,6 +18,7 @@ import java.util.concurrent.ExecutorService;
 public class RemotingServerDelegate {
 
     private RemotingServer remotingServer;
+    
     private AppContext appContext;
 
     public RemotingServerDelegate(RemotingServer remotingServer, AppContext appContext) {

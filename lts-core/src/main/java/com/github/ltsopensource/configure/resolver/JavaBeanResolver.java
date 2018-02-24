@@ -1,7 +1,7 @@
-package com.github.ltsopensource.autoconfigure.resolver;
+package com.github.ltsopensource.configure.resolver;
 
-import com.github.ltsopensource.autoconfigure.AutoConfigContext;
-import com.github.ltsopensource.autoconfigure.PropertiesConfigurationFactory;
+import com.github.ltsopensource.configure.AutoConfigContext;
+import com.github.ltsopensource.configure.PropertiesConfigurationFactory;
 
 import java.beans.PropertyDescriptor;
 import java.util.HashMap;

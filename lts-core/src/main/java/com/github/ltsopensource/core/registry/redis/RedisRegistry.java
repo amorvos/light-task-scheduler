@@ -16,6 +16,7 @@ import com.github.ltsopensource.core.registry.NodeRegistryUtils;
 import com.github.ltsopensource.core.registry.NotifyEvent;
 import com.github.ltsopensource.core.registry.NotifyListener;
 import com.github.ltsopensource.core.support.SystemClock;
+import com.google.common.collect.Maps;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
@@ -31,10 +32,10 @@ public class RedisRegistry extends FailbackRegistry {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(RedisRegistry.class);
 
-    private final Map<String, JedisPool> jedisPools = new ConcurrentHashMap<String, JedisPool>();
+    private final Map<String, JedisPool> jedisPools = Maps.newConcurrentMap();
 
     private String clusterName;
-    private final ScheduledExecutorService expireExecutor = Executors.newScheduledThreadPool(1,
+    private final ScheduledExecutorService scheduledExecutorService = Executors.newScheduledThreadPool(1,
             new NamedThreadFactory("LTSRedisRegistryExpireTimer", true));
     private final ScheduledFuture<?> expireFuture;
     private final int expirePeriod;
@@ -72,7 +73,7 @@ public class RedisRegistry extends FailbackRegistry {
 
         this.expirePeriod = config.getParameter(ExtConfig.REDIS_SESSION_TIMEOUT, Constants.DEFAULT_SESSION_TIMEOUT);
 
-        this.expireFuture = expireExecutor.scheduleWithFixedDelay(new Runnable() {
+        this.expireFuture = scheduledExecutorService.scheduleWithFixedDelay(new Runnable() {
             public void run() {
                 try {
                     deferExpired(); // 延长过期时间

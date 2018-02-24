@@ -2,6 +2,7 @@ package com.github.ltsopensource.core.compiler;
 
 import com.github.ltsopensource.core.commons.utils.ClassHelper;
 import com.github.ltsopensource.core.logger.LoggerFactory;
+import com.google.common.collect.Lists;
 
 import javax.tools.*;
 import java.io.*;
@@ -13,6 +14,9 @@ import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.*;
 
+/**
+ * JDK的动态代码生成
+ */
 public class JdkCompiler extends AbstractCompiler {
 
     public static final String CLASS_EXTENSION = ".class";
@@ -34,9 +38,7 @@ public class JdkCompiler extends AbstractCompiler {
                     "Cannot find the system Java compiler. "
                             + "Check that your class path includes tools.jar");
         }
-        options = new ArrayList<String>();
-//        options.add("-target");
-//        options.add("1.6");
+        options = Lists.newArrayList();
         StandardJavaFileManager manager = compiler.getStandardFileManager(diagnosticCollector, null, null);
         ClassLoader loader = Thread.currentThread().getContextClassLoader();
         if (loader.getClass().getName().equals("org.springframework.boot.context.embedded.tomcat.TomcatEmbeddedWebappClassLoader")) {
@@ -56,14 +58,12 @@ public class JdkCompiler extends AbstractCompiler {
             }
         }
         final ClassLoader finalLoader = loader;
-        classLoader = AccessController.doPrivileged(new PrivilegedAction<ClassLoaderImpl>() {
-            public ClassLoaderImpl run() {
-                return new ClassLoaderImpl(finalLoader);
-            }
-        });
+        classLoader = AccessController.doPrivileged(
+                (PrivilegedAction<ClassLoaderImpl>) () -> new ClassLoaderImpl(finalLoader));
         javaFileManager = new JavaFileManagerImpl(manager, classLoader);
     }
 
+    @Override
     public Class<?> doCompile(String name, String sourceCode) throws Throwable {
         int i = name.lastIndexOf('.');
         String packageName = i < 0 ? "" : name.substring(0, i);
@@ -185,8 +185,9 @@ public class JdkCompiler extends AbstractCompiler {
         @Override
         public FileObject getFileForInput(Location location, String packageName, String relativeName) throws IOException {
             FileObject o = fileObjects.get(uri(location, packageName, relativeName));
-            if (o != null)
+            if (o != null) {
                 return o;
+            }
             return super.getFileForInput(location, packageName, relativeName);
         }
 
@@ -213,8 +214,9 @@ public class JdkCompiler extends AbstractCompiler {
 
         @Override
         public String inferBinaryName(Location loc, JavaFileObject file) {
-            if (file instanceof JavaFileObjectImpl)
+            if (file instanceof JavaFileObjectImpl) {
                 return file.getName();
+            }
             return super.inferBinaryName(loc, file);
         }
 

@@ -2,12 +2,12 @@ package com.github.ltsopensource.core.registry;
 
 import com.github.ltsopensource.core.AppContext;
 import com.github.ltsopensource.core.cluster.Node;
-import com.github.ltsopensource.core.commons.concurrent.ConcurrentHashSet;
 import com.github.ltsopensource.core.commons.utils.Callable;
 import com.github.ltsopensource.core.constant.Constants;
 import com.github.ltsopensource.core.constant.ExtConfig;
 import com.github.ltsopensource.core.factory.NamedThreadFactory;
 import com.github.ltsopensource.core.support.NodeShutdownHook;
+import com.google.common.collect.Sets;
 
 import java.util.*;
 import java.util.concurrent.*;
@@ -25,8 +25,8 @@ public abstract class FailbackRegistry extends AbstractRegistry {
     private ScheduledFuture<?> retryFuture;
 
     // 注册失败的定时重试
-    private final Set<Node> failedRegistered = new ConcurrentHashSet<Node>();
-    private final Set<Node> failedUnRegistered = new ConcurrentHashSet<Node>();
+    private final Set<Node> failedRegistered = Sets.newConcurrentHashSet();
+    private final Set<Node> failedUnRegistered = Sets.newConcurrentHashSet();
     private final ConcurrentMap<Node, Set<NotifyListener>> failedSubscribed = new ConcurrentHashMap<Node, Set<NotifyListener>>();
     private final ConcurrentMap<Node, Set<NotifyListener>> failedUnsubscribed = new ConcurrentHashMap<Node, Set<NotifyListener>>();
     private final ConcurrentMap<Node, Map<NotifyListener, NotifyPair<NotifyEvent, List<Node>>>> failedNotified = new ConcurrentHashMap<Node, Map<NotifyListener, NotifyPair<NotifyEvent, List<Node>>>>();
@@ -113,7 +113,7 @@ public abstract class FailbackRegistry extends AbstractRegistry {
         // 将失败的取消订阅请求记录到失败列表，定时重试
         Set<NotifyListener> listeners = failedUnsubscribed.get(node);
         if (listeners == null) {
-            failedUnsubscribed.putIfAbsent(node, new ConcurrentHashSet<NotifyListener>());
+            failedUnsubscribed.putIfAbsent(node, Sets.newConcurrentHashSet());
             listeners = failedUnsubscribed.get(node);
         }
         listeners.add(listener);
@@ -191,7 +191,7 @@ public abstract class FailbackRegistry extends AbstractRegistry {
     private void addFailedSubscribed(Node node, NotifyListener listener) {
         Set<NotifyListener> listeners = failedSubscribed.get(node);
         if (listeners == null) {
-            failedSubscribed.putIfAbsent(node, new ConcurrentHashSet<NotifyListener>());
+            failedSubscribed.putIfAbsent(node, Sets.newConcurrentHashSet());
             listeners = failedSubscribed.get(node);
         }
         listeners.add(listener);

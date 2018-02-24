@@ -1,7 +1,7 @@
 package com.github.ltsopensource.core.properties;
 
 
-import com.github.ltsopensource.autoconfigure.annotation.ConfigurationProperties;
+import com.github.ltsopensource.configure.annotation.ConfigurationProperties;
 import com.github.ltsopensource.core.cluster.AbstractConfigProperties;
 import com.github.ltsopensource.core.commons.utils.Assert;
 import com.github.ltsopensource.core.exception.ConfigPropertiesIllegalException;

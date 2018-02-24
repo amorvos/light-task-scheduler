@@ -1,181 +1,99 @@
 package com.github.ltsopensource.core.cluster;
 
-import com.github.ltsopensource.core.domain.Job;
-import com.github.ltsopensource.core.json.JSON;
-import com.github.ltsopensource.core.registry.NodeRegistryUtils;
-
 import java.util.ArrayList;
 import java.util.List;
 
+import com.github.ltsopensource.core.domain.Job;
+import com.github.ltsopensource.core.registry.NodeRegistryUtils;
+
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
+
 /**
- * @author Robert HG (254963746@qq.com) on 6/22/14.
- *         节点
+ * @author Robert HG (254963746@qq.com) on 6/22/14. 节点
  */
+@Setter
+@Getter
+@ToString
 public class Node {
 
-    // 是否可用
-    private boolean available = true;
-    private String clusterName;
-    private NodeType nodeType;
-    private String ip;
-    private Integer port = 0;
-    private String hostName;
-    private String group;
-    private Long createTime;
-    // 线程个数
-    private Integer threads;
-    // 唯一标识
-    private String identity;
-    // 命令端口
-    private Integer httpCmdPort;
+	/**
+	 * 是否可用
+	 */
+	private boolean available = true;
 
-    // 自己关注的节点类型
-    private List<NodeType> listenNodeTypes;
+	private String clusterName;
 
-    private String fullString;
+	private NodeType nodeType;
 
-    private Job job;
+	private String ip;
 
-    public Job getJob() {
-        return job;
-    }
+	private Integer port = 0;
 
-    public void setJob(Job job) {
-        this.job = job;
-    }
+	private String hostName;
 
-    public Integer getHttpCmdPort() {
-        return httpCmdPort;
-    }
+	private String group;
 
-    public void setHttpCmdPort(Integer httpCmdPort) {
-        this.httpCmdPort = httpCmdPort;
-    }
+	private Long createTime;
 
-    public String getHostName() {
-        return hostName;
-    }
+	/**
+	 * 线程个数
+	 */
+	private Integer threads;
 
-    public void setHostName(String hostName) {
-        this.hostName = hostName;
-    }
+	/**
+	 * 唯一标识
+	 */
+	private String identity;
 
-    public boolean isAvailable() {
-        return available;
-    }
+	/**
+	 * 命令端口
+	 */
+	private Integer httpCmdPort;
 
-    public void setAvailable(boolean isAvailable) {
-        this.available = isAvailable;
-    }
+	/**
+	 * 监听的节点类型
+	 */
+	private List<NodeType> listenNodeTypes;
 
-    public NodeType getNodeType() {
-        return nodeType;
-    }
+	private String fullString;
 
-    public void setNodeType(NodeType nodeType) {
-        this.nodeType = nodeType;
-    }
+	private Job job;
 
-    public String getIp() {
-        return ip;
-    }
+	public String getAddress() {
+		return ip + ":" + port;
+	}
 
-    public void setIp(String ip) {
-        this.ip = ip;
-    }
+	public void addListenNodeType(NodeType nodeType) {
+		if (this.listenNodeTypes == null) {
+			this.listenNodeTypes = new ArrayList<NodeType>();
+		}
+		this.listenNodeTypes.add(nodeType);
+	}
 
-    public Integer getPort() {
-        return port;
-    }
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) {
+			return true;
+		}
+		if (o == null || getClass() != o.getClass()) {
+			return false;
+		}
+		Node node = (Node) o;
+		return !(identity != null ? !identity.equals(node.identity) : node.identity != null);
 
-    public void setPort(Integer port) {
-        this.port = port;
-    }
+	}
 
-    public String getGroup() {
-        return group;
-    }
+	@Override
+	public int hashCode() {
+		return identity != null ? identity.hashCode() : 0;
+	}
 
-    public void setGroup(String group) {
-        this.group = group;
-    }
-
-    public Long getCreateTime() {
-        return createTime;
-    }
-
-    public void setCreateTime(Long createTime) {
-        this.createTime = createTime;
-    }
-
-    public Integer getThreads() {
-        return threads;
-    }
-
-    public void setThreads(Integer threads) {
-        this.threads = threads;
-    }
-
-    public String getIdentity() {
-        return identity;
-    }
-
-    public void setIdentity(String identity) {
-        this.identity = identity;
-    }
-
-    public List<NodeType> getListenNodeTypes() {
-        return listenNodeTypes;
-    }
-
-    public void setListenNodeTypes(List<NodeType> listenNodeTypes) {
-        this.listenNodeTypes = listenNodeTypes;
-    }
-
-    public void addListenNodeType(NodeType nodeType) {
-        if (this.listenNodeTypes == null) {
-            this.listenNodeTypes = new ArrayList<NodeType>();
-        }
-        this.listenNodeTypes.add(nodeType);
-    }
-
-    public String getClusterName() {
-        return clusterName;
-    }
-
-    public void setClusterName(String clusterName) {
-        this.clusterName = clusterName;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        Node node = (Node) o;
-
-        return !(identity != null ? !identity.equals(node.identity) : node.identity != null);
-
-    }
-
-    @Override
-    public int hashCode() {
-        return identity != null ? identity.hashCode() : 0;
-    }
-
-    public String getAddress() {
-        return ip + ":" + port;
-    }
-
-    public String toFullString() {
-        if (fullString == null) {
-            fullString = NodeRegistryUtils.getFullPath(this);
-        }
-        return fullString;
-    }
-
-    @Override
-    public String toString() {
-        return JSON.toJSONString(this);
-    }
+	public String toFullString() {
+		if (fullString == null) {
+			fullString = NodeRegistryUtils.getFullPath(this);
+		}
+		return fullString;
+	}
 }

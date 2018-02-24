@@ -14,39 +14,41 @@ import java.util.TimeZone;
  */
 public class FastDateFormat extends Format {
 
-    private static final FormatCache<FastDateFormat> cache = new FormatCache<FastDateFormat>() {
+    private static final FormatCache<FastDateFormat> FORMAT_CACHE = new FormatCache<FastDateFormat>() {
+        @Override
         protected FastDateFormat createInstance(final String pattern, final TimeZone timeZone, final Locale locale) {
             return new FastDateFormat(pattern, timeZone, locale);
         }
     };
 
     private final FastDatePrinter printer;
+
     private final FastDateParser parser;
 
     //-----------------------------------------------------------------------
 
     public static FastDateFormat getInstance() {
-        return cache.getInstance();
+        return FORMAT_CACHE.getInstance();
     }
 
 
     public static FastDateFormat getInstance(final String pattern) {
-        return cache.getInstance(pattern, null, null);
+        return FORMAT_CACHE.getInstance(pattern, null, null);
     }
 
 
     public static FastDateFormat getInstance(final String pattern, final TimeZone timeZone) {
-        return cache.getInstance(pattern, timeZone, null);
+        return FORMAT_CACHE.getInstance(pattern, timeZone, null);
     }
 
 
     public static FastDateFormat getInstance(final String pattern, final Locale locale) {
-        return cache.getInstance(pattern, null, locale);
+        return FORMAT_CACHE.getInstance(pattern, null, locale);
     }
 
 
     public static FastDateFormat getInstance(final String pattern, final TimeZone timeZone, final Locale locale) {
-        return cache.getInstance(pattern, timeZone, locale);
+        return FORMAT_CACHE.getInstance(pattern, timeZone, locale);
     }
 
     //-----------------------------------------------------------------------
@@ -95,7 +97,6 @@ public class FastDateFormat extends Format {
     }
 
     // Parsing
-    //-----------------------------------------------------------------------
     public Date parse(final String source) throws ParseException {
         return parser.parse(source);
     }
@@ -104,6 +105,7 @@ public class FastDateFormat extends Format {
         return parser.parse(source, pos);
     }
 
+    @Override
     public Object parseObject(final String source, final ParsePosition pos) {
         return parser.parseObject(source, pos);
     }

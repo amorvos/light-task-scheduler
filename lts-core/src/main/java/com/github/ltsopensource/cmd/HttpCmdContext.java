@@ -1,11 +1,12 @@
 package com.github.ltsopensource.cmd;
 
-import com.github.ltsopensource.core.commons.utils.Assert;
-
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantLock;
+
+import com.github.ltsopensource.core.commons.utils.Assert;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Maps;
 
 /**
  * @author Robert HG (254963746@qq.com)  on 2/17/16.
@@ -13,13 +14,14 @@ import java.util.concurrent.locks.ReentrantLock;
 public class HttpCmdContext {
 
     private ReentrantLock lock = new ReentrantLock();
-    private final Map<String/*节点标识*/, Map<String/*cmd*/, HttpCmdProc>>
-            NODE_PROCESSOR_MAP = new HashMap<String, Map<String, HttpCmdProc>>();
+
+    /**
+     * 节点标识 -> (cmd -> HttpCmdProc)
+     */
+	private final Map<String, Map<String, HttpCmdProc>> NODE_PROCESSOR_MAP = Maps.newHashMap();
 
     public void addCmdProcessor(HttpCmdProc proc) {
-        if (proc == null) {
-            throw new IllegalArgumentException("proc can not be null");
-        }
+		Preconditions.checkNotNull(proc, "proc can not be null");
 
         String identity = proc.nodeIdentity();
         Assert.hasText(identity, "nodeIdentity can't be empty");
@@ -32,7 +34,7 @@ public class HttpCmdContext {
             lock.lock();
             cmdProcessorMap = NODE_PROCESSOR_MAP.get(identity);
             if (cmdProcessorMap == null) {
-                cmdProcessorMap = new ConcurrentHashMap<String, HttpCmdProc>();
+                cmdProcessorMap = Maps.newConcurrentMap();
                 NODE_PROCESSOR_MAP.put(identity, cmdProcessorMap);
             }
             lock.unlock();

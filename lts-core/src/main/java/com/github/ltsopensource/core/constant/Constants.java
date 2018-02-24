@@ -50,7 +50,7 @@ public interface Constants {
 
     int DEFAULT_JOB_TRACKER_PUSHER_THREAD_NUM = 32 + AVAILABLE_PROCESSOR * 5;
 
-    int LATCH_TIMEOUT_MILLIS = 60 * 1000;      // 60s
+    int LATCH_TIMEOUT_MILLIS = 60 * 1000;
 
     int DEFAULT_JOB_MAX_RETRY_TIMES = 10;
 

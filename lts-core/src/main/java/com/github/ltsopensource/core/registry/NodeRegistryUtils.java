@@ -129,8 +129,6 @@ public class NodeRegistryUtils {
             return registryAddress.replace("zookeeper://", "");
         } else if (registryAddress.startsWith("redis://")) {
             return registryAddress.replace("redis://", "");
-        } else if (registryAddress.startsWith("multicast://")) {
-            return registryAddress.replace("multicast://", "");
         }
         throw new IllegalArgumentException("Illegal registry protocol");
     }

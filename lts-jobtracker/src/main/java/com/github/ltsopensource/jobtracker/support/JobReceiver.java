@@ -1,5 +1,8 @@
 package com.github.ltsopensource.jobtracker.support;
 
+import java.util.Date;
+import java.util.List;
+
 import com.github.ltsopensource.biz.logger.domain.JobLogPo;
 import com.github.ltsopensource.biz.logger.domain.LogType;
 import com.github.ltsopensource.core.commons.utils.Assert;
@@ -20,9 +23,6 @@ import com.github.ltsopensource.jobtracker.domain.JobTrackerAppContext;
 import com.github.ltsopensource.jobtracker.monitor.JobTrackerMStatReporter;
 import com.github.ltsopensource.queue.domain.JobPo;
 import com.github.ltsopensource.store.jdbc.exception.DupEntryException;
-
-import java.util.Date;
-import java.util.List;
 
 /**
  * @author Robert HG (254963746@qq.com) on 8/1/14.
@@ -273,6 +273,8 @@ public class JobReceiver {
                 case DUP_REPLACE:
                     jobLogPo.setLevel(Level.INFO);
                     jobLogPo.setMsg("Already Exist And Update Success");
+                    break;
+                default:
                     break;
             }
 

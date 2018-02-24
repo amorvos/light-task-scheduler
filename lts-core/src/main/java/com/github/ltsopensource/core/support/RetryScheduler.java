@@ -67,15 +67,12 @@ public abstract class RetryScheduler<T> {
         }
         EventSubscriber subscriber = new EventSubscriber(RetryScheduler.class.getSimpleName()
                 .concat(appContext.getConfig().getIdentity()),
-                new Observer() {
-                    @Override
-                    public void onObserved(EventInfo eventInfo) {
-                        Node masterNode = (Node) eventInfo.getParam("master");
-                        if (masterNode != null && masterNode.getIdentity().equals(appContext.getConfig().getIdentity())) {
-                            startMasterCheck();
-                        } else {
-                            stopMasterCheck();
-                        }
+                eventInfo -> {
+                    Node masterNode = (Node) eventInfo.getParam("master");
+                    if (masterNode != null && masterNode.getIdentity().equals(appContext.getConfig().getIdentity())) {
+                        startMasterCheck();
+                    } else {
+                        stopMasterCheck();
                     }
                 });
         appContext.getEventCenter().subscribe(subscriber, EcTopic.MASTER_CHANGED);

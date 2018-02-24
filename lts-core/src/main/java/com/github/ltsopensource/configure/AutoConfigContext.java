@@ -1,4 +1,4 @@
-package com.github.ltsopensource.autoconfigure;
+package com.github.ltsopensource.configure;
 
 import java.beans.PropertyDescriptor;
 import java.util.Map;

@@ -1,5 +1,9 @@
 package com.github.ltsopensource.core.remoting;
 
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ExecutorService;
+
 import com.github.ltsopensource.core.AppContext;
 import com.github.ltsopensource.core.cluster.Node;
 import com.github.ltsopensource.core.constant.EcTopic;
@@ -15,168 +19,163 @@ import com.github.ltsopensource.remoting.RemotingClient;
 import com.github.ltsopensource.remoting.RemotingProcessor;
 import com.github.ltsopensource.remoting.exception.RemotingException;
 import com.github.ltsopensource.remoting.protocol.RemotingCommand;
-
-import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.ExecutorService;
+import com.google.common.collect.Lists;
 
 /**
  * @author Robert HG (254963746@qq.com) on 8/1/14.
  */
 public class RemotingClientDelegate {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(RemotingClientDelegate.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(RemotingClientDelegate.class);
 
-    private RemotingClient remotingClient;
-    private AppContext appContext;
+	private RemotingClient remotingClient;
+	private AppContext appContext;
 
-    // JobTracker 是否可用
-    private volatile boolean serverEnable = false;
-    private List<Node> jobTrackers;
+	// JobTracker 是否可用
+	private volatile boolean serverEnable = false;
 
-    public RemotingClientDelegate(RemotingClient remotingClient, AppContext appContext) {
-        this.remotingClient = remotingClient;
-        this.appContext = appContext;
-        this.jobTrackers = new CopyOnWriteArrayList<Node>();
-    }
+	private List<Node> jobTrackers;
 
-    private Node getJobTrackerNode() throws JobTrackerNotFoundException {
-        try {
-            if (jobTrackers.size() == 0) {
-                throw new JobTrackerNotFoundException("no available jobTracker!");
-            }
-            // 连JobTracker的负载均衡算法
-            LoadBalance loadBalance = ServiceLoader.load(LoadBalance.class, appContext.getConfig(), ExtConfig.JOB_TRACKER_SELECT_LOADBALANCE);
-            return loadBalance.select(jobTrackers, appContext.getConfig().getIdentity());
-        } catch (JobTrackerNotFoundException e) {
-            this.serverEnable = false;
-            // publish msg
-            EventInfo eventInfo = new EventInfo(EcTopic.NO_JOB_TRACKER_AVAILABLE);
-            appContext.getEventCenter().publishAsync(eventInfo);
-            throw e;
-        }
-    }
+	public RemotingClientDelegate(RemotingClient remotingClient, AppContext appContext) {
+		this.appContext = appContext;
+		this.remotingClient = remotingClient;
+		this.jobTrackers = Lists.newCopyOnWriteArrayList();
+	}
 
-    public void start() {
-        try {
-            remotingClient.start();
-        } catch (RemotingException e) {
-            throw new RuntimeException(e);
-        }
-    }
+	private Node getJobTrackerNode() throws JobTrackerNotFoundException {
+		try {
+			if (jobTrackers.size() == 0) {
+				throw new JobTrackerNotFoundException("no available jobTracker!");
+			}
+			// 连JobTracker的负载均衡算法
+			LoadBalance loadBalance = ServiceLoader.load(LoadBalance.class, appContext.getConfig(),
+					ExtConfig.JOB_TRACKER_SELECT_LOADBALANCE);
+			return loadBalance.select(jobTrackers, appContext.getConfig().getIdentity());
+		} catch (JobTrackerNotFoundException e) {
+			this.serverEnable = false;
+			// publish msg
+			EventInfo eventInfo = new EventInfo(EcTopic.NO_JOB_TRACKER_AVAILABLE);
+			appContext.getEventCenter().publishAsync(eventInfo);
+			throw e;
+		}
+	}
 
-    public boolean contains(Node jobTracker) {
-        return jobTrackers.contains(jobTracker);
-    }
+	public void start() {
+		try {
+			remotingClient.start();
+		} catch (RemotingException e) {
+			throw new RuntimeException(e);
+		}
+	}
 
-    public void addJobTracker(Node jobTracker) {
-        if (!contains(jobTracker)) {
-            jobTrackers.add(jobTracker);
-        }
-    }
+	public boolean contains(Node jobTracker) {
+		return jobTrackers.contains(jobTracker);
+	}
 
-    public boolean removeJobTracker(Node jobTracker) {
-        return jobTrackers.remove(jobTracker);
-    }
+	public void addJobTracker(Node jobTracker) {
+		if (!contains(jobTracker)) {
+			jobTrackers.add(jobTracker);
+		}
+	}
 
-    /**
-     * 同步调用
-     */
-    public RemotingCommand invokeSync(RemotingCommand request)
-            throws JobTrackerNotFoundException {
+	public boolean removeJobTracker(Node jobTracker) {
+		return jobTrackers.remove(jobTracker);
+	}
 
-        Node jobTracker = getJobTrackerNode();
+	/**
+	 * 同步调用
+	 */
+	public RemotingCommand invokeSync(RemotingCommand request) throws JobTrackerNotFoundException {
 
-        try {
-            RemotingCommand response = remotingClient.invokeSync(jobTracker.getAddress(),
-                    request, appContext.getConfig().getInvokeTimeoutMillis());
-            this.serverEnable = true;
-            return response;
-        } catch (Exception e) {
-            // 将这个JobTracker移除
-            jobTrackers.remove(jobTracker);
-            try {
-                Thread.sleep(100L);
-            } catch (InterruptedException e1) {
-                LOGGER.error(e1.getMessage(), e1);
-            }
-            // 只要不是节点 不可用, 轮询所有节点请求
-            return invokeSync(request);
-        }
-    }
+		Node jobTracker = getJobTrackerNode();
 
-    /**
-     * 异步调用
-     */
-    public void invokeAsync(RemotingCommand request, AsyncCallback asyncCallback)
-            throws JobTrackerNotFoundException {
+		try {
+			RemotingCommand response = remotingClient.invokeSync(jobTracker.getAddress(), request,
+					appContext.getConfig().getInvokeTimeoutMillis());
+			this.serverEnable = true;
+			return response;
+		} catch (Exception e) {
+			// 将这个JobTracker移除
+			jobTrackers.remove(jobTracker);
+			try {
+				Thread.sleep(100L);
+			} catch (InterruptedException e1) {
+				LOGGER.error(e1.getMessage(), e1);
+			}
+			// 只要不是节点 不可用, 轮询所有节点请求
+			return invokeSync(request);
+		}
+	}
 
-        Node jobTracker = getJobTrackerNode();
+	/**
+	 * 异步调用
+	 */
+	public void invokeAsync(RemotingCommand request, AsyncCallback asyncCallback) throws JobTrackerNotFoundException {
 
-        try {
-            remotingClient.invokeAsync(jobTracker.getAddress(), request,
-                    appContext.getConfig().getInvokeTimeoutMillis(), asyncCallback);
-            this.serverEnable = true;
-        } catch (Throwable e) {
-            // 将这个JobTracker移除
-            jobTrackers.remove(jobTracker);
-            try {
-                Thread.sleep(100L);
-            } catch (InterruptedException e1) {
-                LOGGER.error(e1.getMessage(), e1);
-            }
-            // 只要不是节点 不可用, 轮询所有节点请求
-            invokeAsync(request, asyncCallback);
-        }
-    }
+		Node jobTracker = getJobTrackerNode();
 
-    /**
-     * 单向调用
-     */
-    public void invokeOneway(RemotingCommand request)
-            throws JobTrackerNotFoundException {
+		try {
+			remotingClient.invokeAsync(jobTracker.getAddress(), request,
+					appContext.getConfig().getInvokeTimeoutMillis(), asyncCallback);
+			this.serverEnable = true;
+		} catch (Throwable e) {
+			// 将这个JobTracker移除
+			jobTrackers.remove(jobTracker);
+			try {
+				Thread.sleep(100L);
+			} catch (InterruptedException e1) {
+				LOGGER.error(e1.getMessage(), e1);
+			}
+			// 只要不是节点 不可用, 轮询所有节点请求
+			invokeAsync(request, asyncCallback);
+		}
+	}
 
-        Node jobTracker = getJobTrackerNode();
+	/**
+	 * 单向调用
+	 */
+	public void invokeOneway(RemotingCommand request) throws JobTrackerNotFoundException {
 
-        try {
-            remotingClient.invokeOneway(jobTracker.getAddress(), request,
-                    appContext.getConfig().getInvokeTimeoutMillis());
-            this.serverEnable = true;
-        } catch (Throwable e) {
-            // 将这个JobTracker移除
-            jobTrackers.remove(jobTracker);
-            try {
-                Thread.sleep(100L);
-            } catch (InterruptedException e1) {
-                LOGGER.error(e1.getMessage(), e1);
-            }
-            // 只要不是节点 不可用, 轮询所有节点请求
-            invokeOneway(request);
-        }
-    }
+		Node jobTracker = getJobTrackerNode();
 
-    public void registerProcessor(int requestCode, RemotingProcessor processor,
-                                  ExecutorService executor) {
-        remotingClient.registerProcessor(requestCode, processor, executor);
-    }
+		try {
+			remotingClient.invokeOneway(jobTracker.getAddress(), request,
+					appContext.getConfig().getInvokeTimeoutMillis());
+			this.serverEnable = true;
+		} catch (Throwable e) {
+			// 将这个JobTracker移除
+			jobTrackers.remove(jobTracker);
+			try {
+				Thread.sleep(100L);
+			} catch (InterruptedException e1) {
+				LOGGER.error(e1.getMessage(), e1);
+			}
+			// 只要不是节点 不可用, 轮询所有节点请求
+			invokeOneway(request);
+		}
+	}
 
-    public void registerDefaultProcessor(RemotingProcessor processor, ExecutorService executor) {
-        remotingClient.registerDefaultProcessor(processor, executor);
-    }
+	public void registerProcessor(int requestCode, RemotingProcessor processor, ExecutorService executor) {
+		remotingClient.registerProcessor(requestCode, processor, executor);
+	}
 
-    public boolean isServerEnable() {
-        return serverEnable;
-    }
+	public void registerDefaultProcessor(RemotingProcessor processor, ExecutorService executor) {
+		remotingClient.registerDefaultProcessor(processor, executor);
+	}
 
-    public void setServerEnable(boolean serverEnable) {
-        this.serverEnable = serverEnable;
-    }
+	public boolean isServerEnable() {
+		return serverEnable;
+	}
 
-    public void shutdown() {
-        remotingClient.shutdown();
-    }
+	public void setServerEnable(boolean serverEnable) {
+		this.serverEnable = serverEnable;
+	}
 
-    public RemotingClient getRemotingClient() {
-        return remotingClient;
-    }
+	public void shutdown() {
+		remotingClient.shutdown();
+	}
+
+	public RemotingClient getRemotingClient() {
+		return remotingClient;
+	}
 }

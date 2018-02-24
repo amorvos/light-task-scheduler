@@ -1,5 +1,9 @@
 package com.github.ltsopensource.core.commons.utils;
 
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
+
 import java.util.*;
 
 /**
@@ -12,21 +16,21 @@ public class CollectionUtils {
 
     public static <T> List<T> newArrayListOnNull(List<T> list) {
         if (list == null) {
-            list = new ArrayList<T>();
+            list = Lists.newArrayList();
         }
         return list;
     }
 
     public static <T> Set<T> newHashSetOnNull(Set<T> set) {
         if (set == null) {
-            set = new HashSet<T>();
+            set = Sets.newHashSet();
         }
         return set;
     }
 
     public static <K, V> Map<K, V> newHashMapOnNull(Map<K, V> map) {
         if (map == null) {
-            map = new HashMap<K, V>();
+            map = Maps.newHashMap();
         }
         return map;
     }
@@ -42,9 +46,9 @@ public class CollectionUtils {
 
     public static Map<String, String> toMap(Properties properties) {
         if (properties == null) {
-            return new HashMap<String, String>(0);
+            return Maps.newHashMapWithExpectedSize(0);
         }
-        Map<String, String> map = new HashMap<String, String>(properties.size());
+        Map<String, String> map = Maps.newHashMapWithExpectedSize(properties.size());
 
         for (Map.Entry<Object, Object> entry : properties.entrySet()) {
             map.put(entry.getKey().toString(), entry.getValue().toString());

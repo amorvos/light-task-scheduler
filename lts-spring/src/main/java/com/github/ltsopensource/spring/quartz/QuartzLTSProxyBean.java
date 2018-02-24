@@ -1,6 +1,6 @@
 package com.github.ltsopensource.spring.quartz;
 
-import com.github.ltsopensource.autoconfigure.PropertiesConfigurationFactory;
+import com.github.ltsopensource.configure.PropertiesConfigurationFactory;
 import com.github.ltsopensource.core.logger.Logger;
 import com.github.ltsopensource.core.logger.LoggerFactory;
 import com.github.ltsopensource.core.properties.JobClientProperties;

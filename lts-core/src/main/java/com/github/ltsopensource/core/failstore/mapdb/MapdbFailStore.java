@@ -23,7 +23,9 @@ import java.util.concurrent.ConcurrentNavigableMap;
 public class MapdbFailStore extends AbstractFailStore {
 
     public static final String name = "mapdb";
+
     private DB db;
+
     private ConcurrentNavigableMap<String, String> map;
 
     public MapdbFailStore(File dbPath, boolean needLock) {

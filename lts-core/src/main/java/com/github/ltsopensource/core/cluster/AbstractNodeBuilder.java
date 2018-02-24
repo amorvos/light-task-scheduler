@@ -45,7 +45,7 @@ public abstract class AbstractNodeBuilder<T extends AbstractJobNode, B extends N
             throw new IllegalStateException("Already Built");
         }
         checkLocations();
-        T node = build0();
+        T node = doBuild();
         if (masterChangeListeners != null) {
             for (MasterChangeListener masterChangeListener : masterChangeListeners) {
                 node.addMasterChangeListener(masterChangeListener);
@@ -54,5 +54,5 @@ public abstract class AbstractNodeBuilder<T extends AbstractJobNode, B extends N
         return node;
     }
 
-    protected abstract T build0();
+    protected abstract T doBuild();
 }

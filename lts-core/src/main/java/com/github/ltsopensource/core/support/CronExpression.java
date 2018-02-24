@@ -170,6 +170,8 @@ import java.util.*;
  * @author Sharada Jambula, James House
  * @author Contributions from Mads Henderson
  * @author Refactoring from CronTrigger to CronExpression by Aaron Craven
+ *
+ * TODO 重构
  */
 public final class CronExpression implements Serializable, Cloneable {
 
@@ -1429,6 +1431,7 @@ public final class CronExpression implements Serializable, Cloneable {
 }
 
 class ValueSet {
+
     public int value;
 
     public int pos;

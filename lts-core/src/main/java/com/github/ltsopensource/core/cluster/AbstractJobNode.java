@@ -1,5 +1,8 @@
 package com.github.ltsopensource.core.cluster;
 
+import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
+
 import com.github.ltsopensource.cmd.HttpCmdServer;
 import com.github.ltsopensource.core.AppContext;
 import com.github.ltsopensource.core.cmd.JVMInfoGetHttpCmd;
@@ -21,329 +24,339 @@ import com.github.ltsopensource.core.listener.SelfChangeListener;
 import com.github.ltsopensource.core.logger.Logger;
 import com.github.ltsopensource.core.logger.LoggerFactory;
 import com.github.ltsopensource.core.protocol.command.CommandBodyWrapper;
-import com.github.ltsopensource.core.registry.*;
+import com.github.ltsopensource.core.registry.AbstractRegistry;
+import com.github.ltsopensource.core.registry.NotifyEvent;
+import com.github.ltsopensource.core.registry.NotifyListener;
+import com.github.ltsopensource.core.registry.Registry;
+import com.github.ltsopensource.core.registry.RegistryFactory;
+import com.github.ltsopensource.core.registry.RegistryStatMonitor;
 import com.github.ltsopensource.core.spi.ServiceLoader;
 import com.github.ltsopensource.core.support.AliveKeeping;
 import com.github.ltsopensource.core.support.ConfigValidator;
 import com.github.ltsopensource.ec.EventCenter;
 import com.github.ltsopensource.ec.EventInfo;
 import com.github.ltsopensource.remoting.serialize.AdaptiveSerializable;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
+import com.google.common.collect.Lists;
 
 /**
- * @author Robert HG (254963746@qq.com) on 8/15/14.
- *         抽象节点
+ * @author Robert HG (254963746@qq.com) on 8/15/14. 抽象节点
  */
 public abstract class AbstractJobNode<T extends Node, Context extends AppContext> implements JobNode {
 
-    protected static final Logger LOGGER = LoggerFactory.getLogger(JobNode.class);
+	protected static final Logger LOGGER = LoggerFactory.getLogger(JobNode.class);
 
-    protected Registry registry;
-    protected T node;
-    protected Config config;
-    protected Context appContext;
-    private List<NodeChangeListener> nodeChangeListeners;
-    private List<MasterChangeListener> masterChangeListeners;
-    protected AtomicBoolean started = new AtomicBoolean(false);
+	protected AtomicBoolean started = new AtomicBoolean(false);
 
-    public AbstractJobNode() {
-        appContext = getAppContext();
-        node = NodeFactory.create(getNodeClass());
-        config = JobNodeConfigFactory.getDefaultConfig();
-        config.setNodeType(node.getNodeType());
-        appContext.setConfig(config);
-        nodeChangeListeners = new ArrayList<NodeChangeListener>();
-        masterChangeListeners = new ArrayList<MasterChangeListener>();
-    }
+	private List<MasterChangeListener> masterChangeListeners;
 
-    final public void start() {
-        try {
-            if (started.compareAndSet(false, true)) {
+	private List<NodeChangeListener> nodeChangeListeners;
 
-                configValidate();
+	protected Context appContext;
 
-                // 初始化配置
-                initConfig();
+	protected Registry registry;
 
-                // 初始化HttpCmdServer
-                initHttpCmdServer();
+	protected Config config;
 
-                beforeRemotingStart();
+	protected T node;
 
-                remotingStart();
+	public AbstractJobNode() {
+		// 初始化上下文
+		appContext = getAppContext();
+		// 节点初始化
+		node = NodeFactory.create(getNodeClass());
+		// 这里载入的是默认的配置信息
+		config = JobNodeConfigFactory.getDefaultConfig();
+		config.setNodeType(node.getNodeType());
+		appContext.setConfig(config);
+		nodeChangeListeners = Lists.newArrayList();
+		masterChangeListeners = Lists.newArrayList();
+	}
 
-                afterRemotingStart();
+	@Override
+	final public void start() {
+		try {
+			if (started.compareAndSet(false, true)) {
 
-                initRegistry();
+				configValidate();
 
-                registry.register(node);
+				initConfig();
 
-                AliveKeeping.start();
+				initHttpCmdServer();
 
-                LOGGER.info("========== Start success, nodeType={}, identity={}", config.getNodeType(), config.getIdentity());
-            }
-        } catch (Throwable e) {
-            if (e.getMessage().contains("Address already in use")) {
-                LOGGER.error("========== Start failed at listen port {}, nodeType={}, identity={}", config.getListenPort(), config.getNodeType(), config.getIdentity(), e);
-            } else {
-                LOGGER.error("========== Start failed, nodeType={}, identity={}", config.getNodeType(), config.getIdentity(), e);
-            }
-        }
-    }
+				beforeRemotingStart();
 
-    private void initHttpCmdServer() {
-        // 命令中心
-        int port = appContext.getConfig().getParameter(ExtConfig.HTTP_CMD_PORT, 8719);
-        appContext.setHttpCmdServer(HttpCmdServer.Factory.getHttpCmdServer(config.getIp(), port));
+				remotingStart();
 
-        // 先启动，中间看端口是否被占用
-        appContext.getHttpCmdServer().start();
-        // 设置command端口，会暴露到注册中心上
-        node.setHttpCmdPort(appContext.getHttpCmdServer().getPort());
+				afterRemotingStart();
 
-        appContext.getHttpCmdServer().registerCommands(
-                new StatusCheckHttpCmd(appContext.getConfig()),
-                new JVMInfoGetHttpCmd(appContext.getConfig()));        // 状态检查
-    }
+				initRegistry();
 
-    final public void stop() {
-        try {
-            if (started.compareAndSet(true, false)) {
+				registry.register(node);
 
-                if (registry != null) {
-                    registry.unregister(node);
-                }
+				AliveKeeping.start();
 
-                beforeRemotingStop();
+				LOGGER.info("========== Start success, nodeType={}, identity={}", config.getNodeType(),
+						config.getIdentity());
+			}
+		} catch (Throwable e) {
+			if (e.getMessage().contains("Address already in use")) {
+				LOGGER.error("========== Start failed at listen port {}, nodeType={}, identity={}",
+						config.getListenPort(), config.getNodeType(), config.getIdentity(), e);
+			} else {
+				LOGGER.error("========== Start failed, nodeType={}, identity={}", config.getNodeType(),
+						config.getIdentity(), e);
+			}
+		}
+	}
 
-                remotingStop();
+	private void initHttpCmdServer() {
+		// 命令中心
+		int port = appContext.getConfig().getParameter(ExtConfig.HTTP_CMD_PORT, 8719);
+		appContext.setHttpCmdServer(HttpCmdServer.Factory.getHttpCmdServer(config.getIp(), port));
 
-                afterRemotingStop();
+		// 先启动，中间看端口是否被占用
+		appContext.getHttpCmdServer().start();
+		// 设置command端口，会暴露到注册中心上
+		node.setHttpCmdPort(appContext.getHttpCmdServer().getPort());
 
-                appContext.getEventCenter().publishSync(new EventInfo(EcTopic.NODE_SHUT_DOWN));
+		appContext.getHttpCmdServer().registerCommands(new StatusCheckHttpCmd(appContext.getConfig()),
+				new JVMInfoGetHttpCmd(appContext.getConfig())); // 状态检查
+	}
 
-                AliveKeeping.stop();
+	final public void stop() {
+		try {
+			if (started.compareAndSet(true, false)) {
 
-                LOGGER.info("========== Stop success, nodeType={}, identity={}", config.getNodeType(), config.getIdentity());
-            }
-        } catch (Throwable e) {
-            LOGGER.error("========== Stop failed, nodeType={}, identity={}", config.getNodeType(), config.getIdentity(), e);
-        }
-    }
+				if (registry != null) {
+					registry.unregister(node);
+				}
 
-    @Override
-    public void destroy() {
-        try {
-            registry.destroy();
-            LOGGER.info("Destroy success, nodeType={}, identity={}", config.getNodeType(), config.getIdentity());
-        } catch (Throwable e) {
-            LOGGER.error("Destroy failed, nodeType={}, identity={}", config.getNodeType(), config.getIdentity(), e);
-        }
-    }
+				beforeRemotingStop();
 
-    protected void configValidate() {
-        ConfigValidator.validateNodeGroup(config.getNodeGroup());
-        ConfigValidator.validateClusterName(config.getClusterName());
-        ConfigValidator.validateIdentity(config.getIdentity());
-    }
+				remotingStop();
 
-    protected void initConfig() {
+				afterRemotingStop();
 
-        String compiler = config.getParameter(ExtConfig.COMPILER);
-        if (StringUtils.isNotEmpty(compiler)) {
-            AbstractCompiler.setCompiler(compiler);
-        }
+				appContext.getEventCenter().publishSync(new EventInfo(EcTopic.NODE_SHUT_DOWN));
 
-        if (StringUtils.isEmpty(config.getIp())) {
-            config.setIp(NetUtils.getLocalHost());
-        }
-        if (StringUtils.isEmpty(config.getIdentity())) {
-            JobNodeConfigFactory.buildIdentity(config);
-        }
-        NodeFactory.build(node, config);
+				AliveKeeping.stop();
 
-        LOGGER.info("Current Node config :{}", config);
+				LOGGER.info("========== Stop success, nodeType={}, identity={}", config.getNodeType(),
+						config.getIdentity());
+			}
+		} catch (Throwable e) {
+			LOGGER.error("========== Stop failed, nodeType={}, identity={}", config.getNodeType(), config.getIdentity(),
+					e);
+		}
+	}
 
-        appContext.setEventCenter(ServiceLoader.load(EventCenter.class, config));
+	@Override
+	public void destroy() {
+		try {
+			registry.destroy();
+			LOGGER.info("Destroy success, nodeType={}, identity={}", config.getNodeType(), config.getIdentity());
+		} catch (Throwable e) {
+			LOGGER.error("Destroy failed, nodeType={}, identity={}", config.getNodeType(), config.getIdentity(), e);
+		}
+	}
 
-        appContext.setCommandBodyWrapper(new CommandBodyWrapper(config));
-        appContext.setMasterElector(new MasterElector(appContext));
-        appContext.getMasterElector().addMasterChangeListener(masterChangeListeners);
-        appContext.setRegistryStatMonitor(new RegistryStatMonitor(appContext));
+	protected void configValidate() {
+		ConfigValidator.validateNodeGroup(config.getNodeGroup());
+		ConfigValidator.validateClusterName(config.getClusterName());
+		ConfigValidator.validateIdentity(config.getIdentity());
+	}
 
-        // 订阅的node管理
-        SubscribedNodeManager subscribedNodeManager = new SubscribedNodeManager(appContext);
-        appContext.setSubscribedNodeManager(subscribedNodeManager);
-        nodeChangeListeners.add(subscribedNodeManager);
-        // 用于master选举的监听器
-        nodeChangeListeners.add(new MasterElectionListener(appContext));
-        // 监听自己节点变化（如，当前节点被禁用了）
-        nodeChangeListeners.add(new SelfChangeListener(appContext));
+	protected void initConfig() {
 
-        setSpiConfig();
-    }
+		String compiler = config.getParameter(ExtConfig.COMPILER);
+		if (StringUtils.isNotEmpty(compiler)) {
+			AbstractCompiler.setCompiler(compiler);
+		}
 
-    private void setSpiConfig() {
-        // 设置默认序列化方式
-        String defaultSerializable = config.getParameter(ExtConfig.REMOTING_SERIALIZABLE_DFT);
-        if (StringUtils.isNotEmpty(defaultSerializable)) {
-            AdaptiveSerializable.setDefaultSerializable(defaultSerializable);
-        }
+		if (StringUtils.isEmpty(config.getIp())) {
+			config.setIp(NetUtils.getLocalHost());
+		}
+		if (StringUtils.isEmpty(config.getIdentity())) {
+			JobNodeConfigFactory.buildIdentity(config);
+		}
+		NodeFactory.build(node, config);
 
-        // 设置json
-        String ltsJson = config.getParameter(ExtConfig.LTS_JSON);
-        if (StringUtils.isNotEmpty(ltsJson)) {
-            JSONFactory.setJSONAdapter(ltsJson);
-        }
+		LOGGER.info("Current Node config :{}", config);
 
-        // 设置logger
-        String logger = config.getParameter(ExtConfig.LTS_LOGGER);
-        if (StringUtils.isNotEmpty(logger)) {
-            LoggerFactory.setLoggerAdapter(logger);
-        }
-    }
+		appContext.setEventCenter(ServiceLoader.load(EventCenter.class, config));
 
-    private void initRegistry() {
-        registry = RegistryFactory.getRegistry(appContext);
-        if (registry instanceof AbstractRegistry) {
-            ((AbstractRegistry) registry).setNode(node);
-        }
-        registry.subscribe(node, new NotifyListener() {
-            private final Logger NOTIFY_LOGGER = LoggerFactory.getLogger(NotifyListener.class);
+		appContext.setCommandBodyWrapper(new CommandBodyWrapper(config));
+		appContext.setMasterElector(new MasterElector(appContext));
+		appContext.getMasterElector().addMasterChangeListener(masterChangeListeners);
+		appContext.setRegistryStatMonitor(new RegistryStatMonitor(appContext));
 
-            @Override
-            public void notify(NotifyEvent event, List<Node> nodes) {
-                if (CollectionUtils.isEmpty(nodes)) {
-                    return;
-                }
-                switch (event) {
-                    case ADD:
-                        for (NodeChangeListener listener : nodeChangeListeners) {
-                            try {
-                                listener.addNodes(nodes);
-                            } catch (Throwable t) {
-                                NOTIFY_LOGGER.error("{} add nodes failed , cause: {}", listener.getClass().getName(), t.getMessage(), t);
-                            }
-                        }
-                        break;
-                    case REMOVE:
-                        for (NodeChangeListener listener : nodeChangeListeners) {
-                            try {
-                                listener.removeNodes(nodes);
-                            } catch (Throwable t) {
-                                NOTIFY_LOGGER.error("{} remove nodes failed , cause: {}", listener.getClass().getName(), t.getMessage(), t);
-                            }
-                        }
-                        break;
-                }
-            }
-        });
-    }
+		// 订阅的node管理
+		SubscribedNodeManager subscribedNodeManager = new SubscribedNodeManager(appContext);
+		appContext.setSubscribedNodeManager(subscribedNodeManager);
+		nodeChangeListeners.add(subscribedNodeManager);
+		// 用于master选举的监听器
+		nodeChangeListeners.add(new MasterElectionListener(appContext));
+		// 监听自己节点变化（如，当前节点被禁用了）
+		nodeChangeListeners.add(new SelfChangeListener(appContext));
 
-    protected abstract void remotingStart();
+		setSpiConfig();
+	}
 
-    protected abstract void remotingStop();
+	private void setSpiConfig() {
+		// 设置默认序列化方式
+		String defaultSerializable = config.getParameter(ExtConfig.REMOTING_SERIALIZABLE_DFT);
+		if (StringUtils.isNotEmpty(defaultSerializable)) {
+			AdaptiveSerializable.setDefaultSerializable(defaultSerializable);
+		}
 
-    protected abstract void beforeRemotingStart();
+		// 设置json
+		String ltsJson = config.getParameter(ExtConfig.LTS_JSON);
+		if (StringUtils.isNotEmpty(ltsJson)) {
+			JSONFactory.setJSONAdapter(ltsJson);
+		}
 
-    protected abstract void afterRemotingStart();
+		// 设置logger
+		String logger = config.getParameter(ExtConfig.LTS_LOGGER);
+		if (StringUtils.isNotEmpty(logger)) {
+			LoggerFactory.setLoggerAdapter(logger);
+		}
+	}
 
-    protected abstract void beforeRemotingStop();
+	private void initRegistry() {
+		registry = RegistryFactory.getRegistry(appContext);
+		if (registry instanceof AbstractRegistry) {
+			((AbstractRegistry) registry).setNode(node);
+		}
+		registry.subscribe(node, new NotifyListener() {
+			private final Logger NOTIFY_LOGGER = LoggerFactory.getLogger(NotifyListener.class);
 
-    protected abstract void afterRemotingStop();
+			@Override
+			public void notify(NotifyEvent event, List<Node> nodes) {
+				if (CollectionUtils.isEmpty(nodes)) {
+					return;
+				}
+				switch (event) {
+				case ADD:
+					for (NodeChangeListener listener : nodeChangeListeners) {
+						try {
+							listener.addNodes(nodes);
+						} catch (Throwable t) {
+							NOTIFY_LOGGER.error("{} add nodes failed , cause: {}", listener.getClass().getName(),
+									t.getMessage(), t);
+						}
+					}
+					break;
+				case REMOVE:
+					for (NodeChangeListener listener : nodeChangeListeners) {
+						try {
+							listener.removeNodes(nodes);
+						} catch (Throwable t) {
+							NOTIFY_LOGGER.error("{} remove nodes failed , cause: {}", listener.getClass().getName(),
+									t.getMessage(), t);
+						}
+					}
+					break;
+				default:
+					break;
+				}
+			}
+		});
+	}
 
-    @SuppressWarnings("unchecked")
-    private Context getAppContext() {
-        try {
-            return ((Class<Context>)
-                    GenericsUtils.getSuperClassGenericType(this.getClass(), 1))
-                    .newInstance();
-        } catch (InstantiationException e) {
-            throw new RuntimeException(e);
-        } catch (IllegalAccessException e) {
-            throw new RuntimeException(e);
-        }
-    }
+	protected abstract void beforeRemotingStart();
 
-    @SuppressWarnings("unchecked")
-    private Class<T> getNodeClass() {
-        return (Class<T>)
-                GenericsUtils.getSuperClassGenericType(this.getClass(), 0);
-    }
+	protected abstract void remotingStart();
 
+	protected abstract void afterRemotingStart();
 
-    /**
-     * 设置zookeeper注册中心地址
-     */
-    public void setRegistryAddress(String registryAddress) {
-        config.setRegistryAddress(registryAddress);
-    }
+	protected abstract void beforeRemotingStop();
 
-    /**
-     * 设置远程调用超时时间
-     */
-    public void setInvokeTimeoutMillis(int invokeTimeoutMillis) {
-        config.setInvokeTimeoutMillis(invokeTimeoutMillis);
-    }
+	protected abstract void remotingStop();
 
-    /**
-     * 设置集群名字
-     */
-    public void setClusterName(String clusterName) {
-        config.setClusterName(clusterName);
-    }
+	protected abstract void afterRemotingStop();
 
-    /**
-     * 节点标识(必须要保证这个标识是唯一的才能设置，请谨慎设置)
-     * 这个是非必须设置的，建议使用系统默认生成
-     */
-    public void setIdentity(String identity) {
-        config.setIdentity(identity);
-    }
+	@SuppressWarnings("unchecked")
+	private Context getAppContext() {
+		try {
+			// 不同节点状态的节点的Context是不同的,需要根据泛型信息初始化
+			// AbstractJobNode<T extends Node, Context extends AppContext>两个泛型元素,因此取第一个
+			return ((Class<Context>) GenericsUtils.getSuperClassGenericType(this.getClass(), 1)).newInstance();
+		} catch (InstantiationException | IllegalAccessException e) {
+			throw new RuntimeException(e);
+		}
+	}
 
-    /**
-     * 添加节点监听器
-     */
-    public void addNodeChangeListener(NodeChangeListener notifyListener) {
-        if (notifyListener != null) {
-            nodeChangeListeners.add(notifyListener);
-        }
-    }
+	@SuppressWarnings("unchecked")
+	private Class<T> getNodeClass() {
+		return (Class<T>) GenericsUtils.getSuperClassGenericType(this.getClass(), 0);
+	}
 
-    /**
-     * 显示设置绑定ip
-     */
-    public void setBindIp(String bindIp) {
-        if (StringUtils.isEmpty(bindIp)
-                || !NetUtils.isValidHost(bindIp)
-                ) {
-            throw new IllegalArgumentException("Invalided bind ip:" + bindIp);
-        }
-        config.setIp(bindIp);
-    }
+	/**
+	 * 设置zookeeper注册中心地址
+	 */
+	public void setRegistryAddress(String registryAddress) {
+		config.setRegistryAddress(registryAddress);
+	}
 
-    /**
-     * 添加 master 节点变化监听器
-     */
-    public void addMasterChangeListener(MasterChangeListener masterChangeListener) {
-        if (masterChangeListener != null) {
-            masterChangeListeners.add(masterChangeListener);
-        }
-    }
+	/**
+	 * 设置远程调用超时时间
+	 */
+	public void setInvokeTimeoutMillis(int invokeTimeoutMillis) {
+		config.setInvokeTimeoutMillis(invokeTimeoutMillis);
+	}
 
-    public void setDataPath(String path) {
-        if (StringUtils.isNotEmpty(path)) {
-            config.setDataPath(path);
-        }
-    }
+	/**
+	 * 设置集群名字
+	 */
+	public void setClusterName(String clusterName) {
+		config.setClusterName(clusterName);
+	}
 
-    /**
-     * 设置额外的配置参数
-     */
-    public void addConfig(String key, String value) {
-        config.setParameter(key, value);
-    }
+	/**
+	 * 节点标识(必须要保证这个标识是唯一的才能设置，请谨慎设置) 这个是非必须设置的，建议使用系统默认生成
+	 */
+	public void setIdentity(String identity) {
+		config.setIdentity(identity);
+	}
+
+	/**
+	 * 添加节点监听器
+	 */
+	public void addNodeChangeListener(NodeChangeListener notifyListener) {
+		if (notifyListener != null) {
+			nodeChangeListeners.add(notifyListener);
+		}
+	}
+
+	/**
+	 * 显示设置绑定ip
+	 */
+	public void setBindIp(String bindIp) {
+		if (StringUtils.isEmpty(bindIp) || !NetUtils.isValidHost(bindIp)) {
+			throw new IllegalArgumentException("Invalided bind ip:" + bindIp);
+		}
+		config.setIp(bindIp);
+	}
+
+	/**
+	 * 添加 master 节点变化监听器
+	 */
+	public void addMasterChangeListener(MasterChangeListener masterChangeListener) {
+		if (masterChangeListener != null) {
+			masterChangeListeners.add(masterChangeListener);
+		}
+	}
+
+	public void setDataPath(String path) {
+		if (StringUtils.isNotEmpty(path)) {
+			config.setDataPath(path);
+		}
+	}
+
+	/**
+	 * 设置额外的配置参数
+	 */
+	public void addConfig(String key, String value) {
+		config.setParameter(key, value);
+	}
 }

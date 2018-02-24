@@ -11,6 +11,7 @@ import java.io.IOException;
  * @author Robert HG (254963746@qq.com) on 11/10/15.
  */
 public abstract class AbstractFailStoreFactory implements FailStoreFactory {
+
     @Override
     public final FailStore getFailStore(Config config, String storePath) {
         if (StringUtils.isEmpty(storePath)) {

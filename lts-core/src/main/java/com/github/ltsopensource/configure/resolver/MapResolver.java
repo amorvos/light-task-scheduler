@@ -1,7 +1,7 @@
-package com.github.ltsopensource.autoconfigure.resolver;
+package com.github.ltsopensource.configure.resolver;
 
-import com.github.ltsopensource.autoconfigure.AutoConfigContext;
-import com.github.ltsopensource.autoconfigure.PropertiesConfigurationResolveException;
+import com.github.ltsopensource.configure.AutoConfigContext;
+import com.github.ltsopensource.configure.PropertiesConfigurationResolveException;
 import com.github.ltsopensource.core.commons.utils.GenericsUtils;
 import com.github.ltsopensource.core.commons.utils.PrimitiveTypeUtils;
 import com.github.ltsopensource.core.json.JSON;

@@ -1,6 +1,7 @@
 package com.github.ltsopensource.core.commons.utils;
 
 import com.github.ltsopensource.core.commons.time.FastDateFormat;
+import com.google.common.collect.Maps;
 
 import java.text.ParseException;
 import java.util.Calendar;
@@ -19,20 +20,20 @@ public class DateUtils {
 
     public static final String YMD = "yyyy-MM-dd";
 
-    public static final long ONE_DAY_MillIS = 24 * 60 * 60 * 1000;
+    public static final long ONE_DAY_MILLIS = 24 * 60 * 60 * 1000;
 
-    private static final ConcurrentMap<Pattern, String> regPatternMap = new ConcurrentHashMap<Pattern, String>();
+    private static final ConcurrentMap<Pattern, String> REG_PATTERN_MAP = Maps.newConcurrentMap();
 
     static {
-        regPatternMap.put(Pattern.compile("^\\d{4}-\\d{1,2}-\\d{1,2}$"), "yyyy-MM-dd");
-        regPatternMap.put(Pattern.compile("^\\d{4}-\\d{1,2}-\\d{1,2} \\d{1,2}:\\d{1,2}:\\d{1,2}$"), "yyyy-MM-dd HH:mm:ss");
-        regPatternMap.put(Pattern.compile("^\\d{4}\\d{1,2}\\d{1,2}$"), "yyyyMMdd");
-        regPatternMap.put(Pattern.compile("^\\d{4}\\d{1,2}$"), "yyyyMM");
-        regPatternMap.put(Pattern.compile("^\\d{4}/\\d{1,2}/\\d{1,2}$"), "yyyy/MM/dd");
-        regPatternMap.put(Pattern.compile("^\\d{4}年\\d{1,2}月\\d{1,2}日$"), "yyyy年MM月dd日");
-        regPatternMap.put(Pattern.compile("^\\d{4}/\\d{1,2}/\\d{1,2} \\d{1,2}:\\d{1,2}:\\d{1,2}$"), "yyyy/MM/dd HH:mm:ss");
-        regPatternMap.put(Pattern.compile("^\\d{4}/\\d{1,2}/\\d{1,2} \\d{1,2}:\\d{1,2}:\\d{1,2}\\.\\d{1}$"), "yyyy/MM/dd HH:mm:ss.S");
-        regPatternMap.put(Pattern.compile("^\\d{4}-\\d{1,2}-\\d{1,2} \\d{1,2}:\\d{1,2}:\\d{1,2}\\.\\d{1}$"), "yyyy-MM-dd HH:mm:ss.S");
+        REG_PATTERN_MAP.put(Pattern.compile("^\\d{4}-\\d{1,2}-\\d{1,2}$"), "yyyy-MM-dd");
+        REG_PATTERN_MAP.put(Pattern.compile("^\\d{4}-\\d{1,2}-\\d{1,2} \\d{1,2}:\\d{1,2}:\\d{1,2}$"), "yyyy-MM-dd HH:mm:ss");
+        REG_PATTERN_MAP.put(Pattern.compile("^\\d{4}\\d{1,2}\\d{1,2}$"), "yyyyMMdd");
+        REG_PATTERN_MAP.put(Pattern.compile("^\\d{4}\\d{1,2}$"), "yyyyMM");
+        REG_PATTERN_MAP.put(Pattern.compile("^\\d{4}/\\d{1,2}/\\d{1,2}$"), "yyyy/MM/dd");
+        REG_PATTERN_MAP.put(Pattern.compile("^\\d{4}年\\d{1,2}月\\d{1,2}日$"), "yyyy年MM月dd日");
+        REG_PATTERN_MAP.put(Pattern.compile("^\\d{4}/\\d{1,2}/\\d{1,2} \\d{1,2}:\\d{1,2}:\\d{1,2}$"), "yyyy/MM/dd HH:mm:ss");
+        REG_PATTERN_MAP.put(Pattern.compile("^\\d{4}/\\d{1,2}/\\d{1,2} \\d{1,2}:\\d{1,2}:\\d{1,2}\\.\\d{1}$"), "yyyy/MM/dd HH:mm:ss.S");
+        REG_PATTERN_MAP.put(Pattern.compile("^\\d{4}-\\d{1,2}-\\d{1,2} \\d{1,2}:\\d{1,2}:\\d{1,2}\\.\\d{1}$"), "yyyy-MM-dd HH:mm:ss.S");
     }
 
     public static Date convert(Long timestamp) {
@@ -84,7 +85,7 @@ public class DateUtils {
 
     public static Date parse(String date) {
         try {
-            for (Map.Entry<Pattern, String> entry : regPatternMap.entrySet()) {
+            for (Map.Entry<Pattern, String> entry : REG_PATTERN_MAP.entrySet()) {
                 boolean isMatch = entry.getKey().matcher(date).matches();
                 if (isMatch) {
                     return FastDateFormat.getInstance(entry.getValue()).parse(date);
