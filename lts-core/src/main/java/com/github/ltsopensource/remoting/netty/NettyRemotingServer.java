@@ -37,9 +37,13 @@ public class NettyRemotingServer extends AbstractRemotingServer {
 	public static final Logger LOGGER = AbstractRemotingServer.LOGGER;
 
 	private final ServerBootstrap serverBootstrap;
+
 	private final EventLoopGroup bossSelectorGroup;
+
 	private final EventLoopGroup workerSelectorGroup;
+
 	private DefaultEventExecutorGroup defaultEventExecutorGroup;
+
 	private AppContext appContext;
 
 	public NettyRemotingServer(AppContext appContext, RemotingServerConfig remotingServerConfig) {

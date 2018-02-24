@@ -51,6 +51,7 @@ public class JobRunnerDelegate implements Runnable {
         stat = (TaskTrackerMStatReporter) appContext.getMStatReporter();
 
         this.interruptor = new InterruptibleAdapter() {
+            @Override
             public void interrupt() {
                 JobRunnerDelegate.this.interrupt();
             }

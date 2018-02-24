@@ -6,6 +6,6 @@ package com.github.ltsopensource.tasktracker.runner;
  */
 public interface RunnerFactory {
 
-    public JobRunner newRunner();
+    JobRunner newRunner();
 
 }

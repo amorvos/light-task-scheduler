@@ -46,14 +46,13 @@ public class JobClient<T extends JobClientNode, Context extends AppContext>
 
 	private static final int BATCH_SIZE = 10;
 
+	// 限流
 	private JobSubmitProtector protector;
 
-	// 监控服务
 	protected JobClientMStatReporter stat;
 
 	public JobClient() {
 		this.stat = new JobClientMStatReporter(appContext);
-		// 监控中心
 		appContext.setMStatReporter(stat);
 	}
 
@@ -84,6 +83,113 @@ public class JobClient<T extends JobClientNode, Context extends AppContext>
 
 	private Response protectSubmit(List<Job> jobs) throws JobSubmitException {
 		return protector.execute(jobs, jobList -> submitJob(jobList, SubmitType.ASYNC));
+	}
+
+	protected Response submitJob(final List<Job> jobs, SubmitType type) throws JobSubmitException {
+		// 检查参数
+		checkFields(jobs);
+
+		final Response response = new Response();
+		try {
+			JobSubmitRequest jobSubmitRequest = CommandBodyWrapper.wrapper(appContext, new JobSubmitRequest());
+			jobSubmitRequest.setJobs(jobs);
+
+			RemotingCommand requestCommand = RemotingCommand
+					.createRequestCommand(JobProtos.RequestCode.SUBMIT_JOB.code(), jobSubmitRequest);
+
+			SubmitCallback submitCallback = responseCommand -> {
+				if (responseCommand == null) {
+					response.setFailedJobs(jobs);
+					response.setSuccess(false);
+					response.setMsg("Submit Job failed: JobTracker is broken");
+					LOGGER.warn("Submit Job failed: {}, {}", jobs, "JobTracker is broken");
+					return;
+				}
+
+				if (JobProtos.ResponseCode.JOB_RECEIVE_SUCCESS.code() == responseCommand.getCode()) {
+					if (LOGGER.isDebugEnabled()) {
+						LOGGER.debug("Submit Job success: {}", jobs);
+					}
+					response.setSuccess(true);
+					return;
+				}
+				// 失败的job
+				JobSubmitResponse jobSubmitResponse = responseCommand.getBody();
+				response.setFailedJobs(jobSubmitResponse.getFailedJobs());
+				response.setSuccess(false);
+				response.setCode(JobProtos.ResponseCode.valueOf(responseCommand.getCode()).name());
+				response.setMsg("Submit Job failed: " + responseCommand.getRemark() + " " + jobSubmitResponse.getMsg());
+				LOGGER.warn("Submit Job failed: {}, {}, {}", jobs, responseCommand.getRemark(),
+						jobSubmitResponse.getMsg());
+			};
+
+			if (SubmitType.ASYNC.equals(type)) {
+				asyncSubmit(requestCommand, submitCallback);
+			} else {
+				syncSubmit(requestCommand, submitCallback);
+			}
+		} catch (JobTrackerNotFoundException e) {
+			response.setSuccess(false);
+			response.setCode(ResponseCode.JOB_TRACKER_NOT_FOUND);
+			response.setMsg("Can not found JobTracker node!");
+		} catch (Exception e) {
+			response.setSuccess(false);
+			response.setCode(ResponseCode.SYSTEM_ERROR);
+			response.setMsg(StringUtils.toString(e));
+		} finally {
+			// 统计
+			if (response.isSuccess()) {
+				stat.incSubmitSuccessNum(jobs.size());
+			} else {
+				stat.incSubmitFailedNum(CollectionUtils.sizeOf(response.getFailedJobs()));
+			}
+		}
+		return response;
+	}
+
+	private void checkFields(List<Job> jobs) {
+		// 参数验证
+		if (CollectionUtils.isEmpty(jobs)) {
+			throw new JobSubmitException("Job can not be null!");
+		}
+		for (Job job : jobs) {
+			if (job == null) {
+				throw new JobSubmitException("Job can not be null!");
+			} else {
+				job.checkField();
+			}
+		}
+	}
+
+	/**
+	 * 异步提交任务
+	 */
+	private void asyncSubmit(RemotingCommand requestCommand, final SubmitCallback submitCallback)
+			throws JobTrackerNotFoundException {
+		final CountDownLatch latch = new CountDownLatch(1);
+		remotingClient.invokeAsync(requestCommand, new AsyncCallback() {
+			@Override
+			public void operationComplete(ResponseFuture responseFuture) {
+				try {
+					submitCallback.call(responseFuture.getResponseCommand());
+				} finally {
+					latch.countDown();
+				}
+			}
+		});
+		try {
+			latch.await(Constants.LATCH_TIMEOUT_MILLIS, TimeUnit.MILLISECONDS);
+		} catch (InterruptedException e) {
+			throw new JobSubmitException("Submit job failed, async request timeout!", e);
+		}
+	}
+
+	/**
+	 * 同步提交任务
+	 */
+	private void syncSubmit(RemotingCommand requestCommand, final SubmitCallback submitCallback)
+			throws JobTrackerNotFoundException {
+		submitCallback.call(remotingClient.invokeSync(requestCommand));
 	}
 
 	/**
@@ -128,135 +234,20 @@ public class JobClient<T extends JobClientNode, Context extends AppContext>
 		}
 	}
 
-	private void checkFields(List<Job> jobs) {
-		// 参数验证
-		if (CollectionUtils.isEmpty(jobs)) {
-			throw new JobSubmitException("Job can not be null!");
-		}
-		for (Job job : jobs) {
-			if (job == null) {
-				throw new JobSubmitException("Job can not be null!");
-			} else {
-				job.checkField();
-			}
-		}
-	}
-
-	protected Response submitJob(final List<Job> jobs, SubmitType type) throws JobSubmitException {
-		// 检查参数
-		checkFields(jobs);
-
-		final Response response = new Response();
-		try {
-			JobSubmitRequest jobSubmitRequest = CommandBodyWrapper.wrapper(appContext, new JobSubmitRequest());
-			jobSubmitRequest.setJobs(jobs);
-
-			RemotingCommand requestCommand = RemotingCommand
-					.createRequestCommand(JobProtos.RequestCode.SUBMIT_JOB.code(), jobSubmitRequest);
-
-			SubmitCallback submitCallback = new SubmitCallback() {
-				@Override
-				public void call(RemotingCommand responseCommand) {
-					if (responseCommand == null) {
-						response.setFailedJobs(jobs);
-						response.setSuccess(false);
-						response.setMsg("Submit Job failed: JobTracker is broken");
-						LOGGER.warn("Submit Job failed: {}, {}", jobs, "JobTracker is broken");
-						return;
-					}
-
-					if (JobProtos.ResponseCode.JOB_RECEIVE_SUCCESS.code() == responseCommand.getCode()) {
-						if (LOGGER.isDebugEnabled()) {
-							LOGGER.debug("Submit Job success: {}", jobs);
-						}
-						response.setSuccess(true);
-						return;
-					}
-					// 失败的job
-					JobSubmitResponse jobSubmitResponse = responseCommand.getBody();
-					response.setFailedJobs(jobSubmitResponse.getFailedJobs());
-					response.setSuccess(false);
-					response.setCode(JobProtos.ResponseCode.valueOf(responseCommand.getCode()).name());
-					response.setMsg(
-							"Submit Job failed: " + responseCommand.getRemark() + " " + jobSubmitResponse.getMsg());
-					LOGGER.warn("Submit Job failed: {}, {}, {}", jobs, responseCommand.getRemark(),
-							jobSubmitResponse.getMsg());
-				}
-			};
-
-			if (SubmitType.ASYNC.equals(type)) {
-				asyncSubmit(requestCommand, submitCallback);
-			} else {
-				syncSubmit(requestCommand, submitCallback);
-			}
-		} catch (JobTrackerNotFoundException e) {
-			response.setSuccess(false);
-			response.setCode(ResponseCode.JOB_TRACKER_NOT_FOUND);
-			response.setMsg("Can not found JobTracker node!");
-		} catch (Exception e) {
-			response.setSuccess(false);
-			response.setCode(ResponseCode.SYSTEM_ERROR);
-			response.setMsg(StringUtils.toString(e));
-		} finally {
-			// 统计
-			if (response.isSuccess()) {
-				stat.incSubmitSuccessNum(jobs.size());
-			} else {
-				stat.incSubmitFailedNum(CollectionUtils.sizeOf(response.getFailedJobs()));
-			}
-		}
-
-		return response;
-	}
-
-	/**
-	 * 异步提交任务
-	 */
-	private void asyncSubmit(RemotingCommand requestCommand, final SubmitCallback submitCallback)
-			throws JobTrackerNotFoundException {
-		final CountDownLatch latch = new CountDownLatch(1);
-		remotingClient.invokeAsync(requestCommand, new AsyncCallback() {
-			@Override
-			public void operationComplete(ResponseFuture responseFuture) {
-				try {
-					submitCallback.call(responseFuture.getResponseCommand());
-				} finally {
-					latch.countDown();
-				}
-			}
-		});
-		try {
-			latch.await(Constants.LATCH_TIMEOUT_MILLIS, TimeUnit.MILLISECONDS);
-		} catch (InterruptedException e) {
-			throw new JobSubmitException("Submit job failed, async request timeout!", e);
-		}
-	}
-
-	/**
-	 * 同步提交任务
-	 */
-	private void syncSubmit(RemotingCommand requestCommand, final SubmitCallback submitCallback)
-			throws JobTrackerNotFoundException {
-		submitCallback.call(remotingClient.invokeSync(requestCommand));
-	}
-
 	public Response submitJob(List<Job> jobs) throws JobSubmitException {
 		checkStart();
 		final Response response = new Response();
 		response.setSuccess(true);
 		int size = jobs.size();
 
-		BatchUtils.batchExecute(size, BATCH_SIZE, jobs, new BatchUtils.Executor<Job>() {
-			@Override
-			public boolean execute(List<Job> list) {
-				Response subResponse = protectSubmit(list);
-				if (!subResponse.isSuccess()) {
-					response.setSuccess(false);
-					response.addFailedJobs(list);
-					response.setMsg(subResponse.getMsg());
-				}
-				return true;
+		BatchUtils.batchExecute(size, BATCH_SIZE, jobs, jobList -> {
+			Response subResponse = protectSubmit(jobList);
+			if (!subResponse.isSuccess()) {
+				response.setSuccess(false);
+				response.addFailedJobs(jobList);
+				response.setMsg(subResponse.getMsg());
 			}
+			return true;
 		});
 		return response;
 	}
@@ -274,8 +265,7 @@ public class JobClient<T extends JobClientNode, Context extends AppContext>
 	}
 
 	enum SubmitType {
-		SYNC, // 同步
-		ASYNC // 异步
+		SYNC, ASYNC
 	}
 
 	private void checkStart() {

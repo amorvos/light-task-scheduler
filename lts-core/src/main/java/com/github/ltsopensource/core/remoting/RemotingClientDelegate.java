@@ -29,6 +29,7 @@ public class RemotingClientDelegate {
 	private static final Logger LOGGER = LoggerFactory.getLogger(RemotingClientDelegate.class);
 
 	private RemotingClient remotingClient;
+
 	private AppContext appContext;
 
 	// JobTracker 是否可用

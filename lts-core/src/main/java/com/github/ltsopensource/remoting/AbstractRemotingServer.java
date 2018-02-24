@@ -75,13 +75,13 @@ public abstract class AbstractRemotingServer extends AbstractRemoting implements
         }
 
         Pair<RemotingProcessor, ExecutorService> pair =
-                new Pair<RemotingProcessor, ExecutorService>(processor, executorThis);
+                new Pair<>(processor, executorThis);
         this.processorTable.put(requestCode, pair);
     }
 
     @Override
     public void registerDefaultProcessor(RemotingProcessor processor, ExecutorService executor) {
-        this.defaultRequestProcessor = new Pair<RemotingProcessor, ExecutorService>(processor, executor);
+        this.defaultRequestProcessor = new Pair<>(processor, executor);
     }
 
     @Override

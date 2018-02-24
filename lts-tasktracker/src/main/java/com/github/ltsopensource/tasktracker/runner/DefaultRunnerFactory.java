@@ -16,12 +16,11 @@ public class DefaultRunnerFactory implements RunnerFactory {
         this.appContext = appContext;
     }
 
+    @Override
     public JobRunner newRunner() {
         try {
             return (JobRunner) appContext.getJobRunnerClass().newInstance();
-        } catch (InstantiationException e) {
-            LOGGER.error(e.getMessage(), e);
-        } catch (IllegalAccessException e) {
+        } catch (InstantiationException | IllegalAccessException e) {
             LOGGER.error(e.getMessage(), e);
         }
         return null;

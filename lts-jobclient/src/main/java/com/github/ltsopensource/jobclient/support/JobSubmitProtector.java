@@ -22,7 +22,7 @@ public class JobSubmitProtector {
 
     private RateLimiter rateLimiter;
 
-    private int acquireTimeout = 100;
+    private int acquireTimeout;
 
     private String errorMsg;
 

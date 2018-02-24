@@ -9,5 +9,5 @@ import java.io.Serializable;
  */
 public interface RemotingCommandBody extends Serializable{
 
-    public void checkFields() throws RemotingCommandFieldCheckException;
+    void checkFields() throws RemotingCommandFieldCheckException;
 }

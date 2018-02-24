@@ -21,10 +21,14 @@ public class HttpCmdAcceptor {
     private static final Logger LOGGER = LoggerFactory.getLogger(HttpCmdAcceptor.class);
 
     private final AtomicBoolean start = new AtomicBoolean(false);
+
     private final ExecutorService executorService;
+
     private ServerSocket serverSocket;
-    private Thread thread;
+
     private HttpCmdContext context;
+
+    private Thread thread;
 
     public HttpCmdAcceptor(ServerSocket serverSocket, HttpCmdContext context) {
         this.context = context;
@@ -32,7 +36,7 @@ public class HttpCmdAcceptor {
         this.executorService = new ThreadPoolExecutor(Constants.AVAILABLE_PROCESSOR,
                 Constants.AVAILABLE_PROCESSOR,
                 0L, TimeUnit.MILLISECONDS,
-                new LinkedBlockingQueue<Runnable>(100), new ThreadPoolExecutor.DiscardPolicy());
+                new LinkedBlockingQueue<>(100), new ThreadPoolExecutor.DiscardPolicy());
     }
 
     public void start() {

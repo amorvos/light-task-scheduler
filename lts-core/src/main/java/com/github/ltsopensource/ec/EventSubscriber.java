@@ -1,33 +1,42 @@
 package com.github.ltsopensource.ec;
 
+import java.util.Objects;
+
+import lombok.Getter;
+import lombok.Setter;
+
 /**
  * 事件订阅者
+ * 
  * @author Robert HG (254963746@qq.com) on 5/11/15.
  */
+@Setter
+@Getter
 public class EventSubscriber {
 
-    public EventSubscriber(String id, Observer observer) {
-        this.id = id;
-        this.observer = observer;
-    }
+	public EventSubscriber(String id, Observer observer) {
+		this.id = id;
+		this.observer = observer;
+	}
 
-    private String id;
+	private String id;
 
-    private Observer observer;
+	private Observer observer;
 
-    public String getId() {
-        return id;
-    }
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) {
+			return true;
+		}
+		if (o == null || getClass() != o.getClass()) {
+			return false;
+		}
+		EventSubscriber that = (EventSubscriber) o;
+		return Objects.equals(id, that.id) && Objects.equals(observer, that.observer);
+	}
 
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    public Observer getObserver() {
-        return observer;
-    }
-
-    public void setObserver(Observer observer) {
-        this.observer = observer;
-    }
+	@Override
+	public int hashCode() {
+		return Objects.hash(id, observer);
+	}
 }

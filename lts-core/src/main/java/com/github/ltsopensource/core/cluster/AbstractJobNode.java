@@ -120,9 +120,10 @@ public abstract class AbstractJobNode<T extends Node, Context extends AppContext
 		node.setHttpCmdPort(appContext.getHttpCmdServer().getPort());
 
 		appContext.getHttpCmdServer().registerCommands(new StatusCheckHttpCmd(appContext.getConfig()),
-				new JVMInfoGetHttpCmd(appContext.getConfig())); // 状态检查
+				new JVMInfoGetHttpCmd(appContext.getConfig()));
 	}
 
+	@Override
 	final public void stop() {
 		try {
 			if (started.compareAndSet(true, false)) {
@@ -202,7 +203,7 @@ public abstract class AbstractJobNode<T extends Node, Context extends AppContext
 		setSpiConfig();
 	}
 
-	private void setSpiConfig() {
+	private void  setSpiConfig() {
 		// 设置默认序列化方式
 		String defaultSerializable = config.getParameter(ExtConfig.REMOTING_SERIALIZABLE_DFT);
 		if (StringUtils.isNotEmpty(defaultSerializable)) {

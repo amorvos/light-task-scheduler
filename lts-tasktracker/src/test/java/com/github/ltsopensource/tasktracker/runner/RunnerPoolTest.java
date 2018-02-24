@@ -7,7 +7,7 @@ import com.github.ltsopensource.core.domain.Job;
 import com.github.ltsopensource.core.domain.JobMeta;
 import com.github.ltsopensource.core.factory.NamedThreadFactory;
 import com.github.ltsopensource.core.json.JSON;
-import com.github.ltsopensource.ec.injvm.InjvmEventCenter;
+import com.github.ltsopensource.ec.injvm.InJvmEventCenter;
 import com.github.ltsopensource.tasktracker.domain.Response;
 import com.github.ltsopensource.tasktracker.domain.TaskTrackerAppContext;
 import com.github.ltsopensource.tasktracker.expcetion.NoAvailableJobRunnerException;
@@ -36,7 +36,7 @@ public class RunnerPoolTest {
 
         TaskTrackerAppContext appContext = new TaskTrackerAppContext();
         appContext.setConfig(config);
-        appContext.setEventCenter(new InjvmEventCenter());
+        appContext.setEventCenter(new InJvmEventCenter());
         appContext.setJobRunnerClass(TestInterruptorJobRunner.class);
 //        appContext.setJobRunnerClass(NormalJobRunner.class);
 

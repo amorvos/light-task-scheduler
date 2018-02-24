@@ -21,18 +21,20 @@ import lombok.ToString;
 public class TaskTrackerAppContext extends AppContext {
 
 	private RemotingClientDelegate remotingClient;
-	// runner 线程池
+
 	private RunnerPool runnerPool;
-	//
+
 	private RunnerFactory runnerFactory;
-	// Pull Job Machine
+
 	private JobPullMachine jobPullMachine;
 
 	private StopWorkingMonitor stopWorkingMonitor;
+
 	/**
 	 * 业务日志记录级别
 	 */
 	private Level bizLogLevel;
+
 	/**
 	 * 执行任务的class
 	 */
