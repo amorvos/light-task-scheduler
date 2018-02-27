@@ -1,5 +1,10 @@
 package com.github.ltsopensource.tasktracker.processor;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+
 import com.github.ltsopensource.core.commons.utils.Callable;
 import com.github.ltsopensource.core.commons.utils.CollectionUtils;
 import com.github.ltsopensource.core.constant.Constants;
@@ -31,204 +36,203 @@ import com.github.ltsopensource.tasktracker.domain.TaskTrackerAppContext;
 import com.github.ltsopensource.tasktracker.expcetion.NoAvailableJobRunnerException;
 import com.github.ltsopensource.tasktracker.runner.RunnerCallback;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
-
 /**
- * @author Robert HG (254963746@qq.com) on 8/14/14.
- *         接受任务并执行
+ * 接受任务并执行
  */
 public class JobPushProcessor extends AbstractProcessor {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(JobPushProcessor.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(JobPushProcessor.class);
 
-    private RetryScheduler<JobRunResult> retryScheduler;
-    private JobRunnerCallback jobRunnerCallback;
-    private RemotingClientDelegate remotingClient;
+	private RetryScheduler<JobRunResult> retryScheduler;
 
-    protected JobPushProcessor(TaskTrackerAppContext appContext) {
-        super(appContext);
-        this.remotingClient = appContext.getRemotingClient();
-        // 线程安全的
-        jobRunnerCallback = new JobRunnerCallback();
+	private RemotingClientDelegate remotingClient;
 
+	private JobRunnerCallback jobRunnerCallback;
 
-        if (isEnableFailStore()) {
-            retryScheduler = new RetryScheduler<JobRunResult>(JobPushProcessor.class.getSimpleName(), appContext,
-                    FailStorePathBuilder.getJobFeedbackPath(appContext), 3) {
-                @Override
-                protected boolean isRemotingEnable() {
-                    return remotingClient.isServerEnable();
-                }
+	protected JobPushProcessor(TaskTrackerAppContext appContext) {
+		super(appContext);
+		this.remotingClient = appContext.getRemotingClient();
+		// 线程安全的
+		jobRunnerCallback = new JobRunnerCallback();
 
-                @Override
-                protected boolean retry(List<JobRunResult> results) {
-                    return retrySendJobResults(results);
-                }
-            };
-            retryScheduler.start();
+		if (isEnableFailStore()) {
+			retryScheduler = new RetryScheduler<JobRunResult>(JobPushProcessor.class.getSimpleName(), appContext,
+					FailStorePathBuilder.getJobFeedbackPath(appContext), 3) {
+				@Override
+				protected boolean isRemotingEnable() {
+					return remotingClient.isServerEnable();
+				}
 
-            NodeShutdownHook.registerHook(appContext, this.getClass().getName(), new Callable() {
-                @Override
-                public void call() throws Exception {
-                    retryScheduler.stop();
-                }
-            });
-        }
-    }
+				@Override
+				protected boolean retry(List<JobRunResult> results) {
+					return retrySendJobResults(results);
+				}
+			};
+			retryScheduler.start();
 
-    @Override
-    public RemotingCommand processRequest(Channel channel,
-                                          final RemotingCommand request) throws RemotingCommandException {
+			NodeShutdownHook.registerHook(appContext, this.getClass().getName(), new Callable() {
+				@Override
+				public void call() throws Exception {
+					retryScheduler.stop();
+				}
+			});
+		}
+	}
 
-        JobPushRequest requestBody = request.getBody();
+	@Override
+	public RemotingCommand processRequest(Channel channel, final RemotingCommand request)
+			throws RemotingCommandException {
 
-        // JobTracker 分发来的 job
-        final List<JobMeta> jobMetaList = requestBody.getJobMetaList();
-        List<String> failedJobIds = null;
+		JobPushRequest requestBody = request.getBody();
 
-        for (JobMeta jobMeta : jobMetaList) {
-            try {
-                appContext.getRunnerPool().execute(jobMeta, jobRunnerCallback);
-            } catch (NoAvailableJobRunnerException e) {
-                if (failedJobIds == null) {
-                    failedJobIds = new ArrayList<String>();
-                }
-                failedJobIds.add(jobMeta.getJobId());
-            }
-        }
-        if (CollectionUtils.isNotEmpty(failedJobIds)) {
-            // 任务推送失败
-            JobPushResponse jobPushResponse = new JobPushResponse();
-            jobPushResponse.setFailedJobIds(failedJobIds);
-            return RemotingCommand.createResponseCommand(JobProtos.ResponseCode.NO_AVAILABLE_JOB_RUNNER.code(), jobPushResponse);
-        }
+		// JobTracker 分发来的 job
+		final List<JobMeta> jobMetaList = requestBody.getJobMetaList();
+		List<String> failedJobIds = null;
 
-        // 任务推送成功
-        return RemotingCommand.createResponseCommand(JobProtos
-                .ResponseCode.JOB_PUSH_SUCCESS.code(), "job push success!");
-    }
+		for (JobMeta jobMeta : jobMetaList) {
+			try {
+				appContext.getRunnerPool().execute(jobMeta, jobRunnerCallback);
+			} catch (NoAvailableJobRunnerException e) {
+				if (failedJobIds == null) {
+					failedJobIds = new ArrayList<String>();
+				}
+				failedJobIds.add(jobMeta.getJobId());
+			}
+		}
+		if (CollectionUtils.isNotEmpty(failedJobIds)) {
+			// 任务推送失败
+			JobPushResponse jobPushResponse = new JobPushResponse();
+			jobPushResponse.setFailedJobIds(failedJobIds);
+			return RemotingCommand.createResponseCommand(JobProtos.ResponseCode.NO_AVAILABLE_JOB_RUNNER.code(),
+					jobPushResponse);
+		}
 
-    /**
-     * 任务执行的回调(任务执行完之后线程回调这个函数)
-     */
-    private class JobRunnerCallback implements RunnerCallback {
-        @Override
-        public JobMeta runComplete(Response response) {
-            // 发送消息给 JobTracker
-            final JobRunResult jobRunResult = new JobRunResult();
-            jobRunResult.setTime(SystemClock.now());
-            jobRunResult.setJobMeta(response.getJobMeta());
-            jobRunResult.setAction(response.getAction());
-            jobRunResult.setMsg(response.getMsg());
-            JobCompletedRequest requestBody = appContext.getCommandBodyWrapper().wrapper(new JobCompletedRequest());
-            requestBody.addJobResult(jobRunResult);
-            requestBody.setReceiveNewJob(response.isReceiveNewJob());     // 设置可以接受新任务
+		// 任务推送成功
+		return RemotingCommand.createResponseCommand(JobProtos.ResponseCode.JOB_PUSH_SUCCESS.code(),
+				"job push success!");
+	}
 
-            int requestCode = JobProtos.RequestCode.JOB_COMPLETED.code();
+	/**
+	 * 任务执行的回调(任务执行完之后线程回调这个函数)
+	 */
+	private class JobRunnerCallback implements RunnerCallback {
+		@Override
+		public JobMeta runComplete(Response response) {
+			// 发送消息给 JobTracker
+			final JobRunResult jobRunResult = new JobRunResult();
+			jobRunResult.setTime(SystemClock.now());
+			jobRunResult.setJobMeta(response.getJobMeta());
+			jobRunResult.setAction(response.getAction());
+			jobRunResult.setMsg(response.getMsg());
+			JobCompletedRequest requestBody = appContext.getCommandBodyWrapper().wrapper(new JobCompletedRequest());
+			requestBody.addJobResult(jobRunResult);
+			requestBody.setReceiveNewJob(response.isReceiveNewJob()); // 设置可以接受新任务
 
-            RemotingCommand request = RemotingCommand.createRequestCommand(requestCode, requestBody);
+			int requestCode = JobProtos.RequestCode.JOB_COMPLETED.code();
 
-            final Response returnResponse = new Response();
+			RemotingCommand request = RemotingCommand.createRequestCommand(requestCode, requestBody);
 
-            try {
-                final CountDownLatch latch = new CountDownLatch(1);
-                remotingClient.invokeAsync(request, new AsyncCallback() {
-                    @Override
-                    public void operationComplete(ResponseFuture responseFuture) {
-                        try {
-                            RemotingCommand commandResponse = responseFuture.getResponseCommand();
+			final Response returnResponse = new Response();
 
-                            if (commandResponse != null && commandResponse.getCode() == RemotingProtos.ResponseCode.SUCCESS.code()) {
-                                JobPushRequest jobPushRequest = commandResponse.getBody();
-                                if (jobPushRequest != null) {
-                                    if (LOGGER.isDebugEnabled()) {
-                                        LOGGER.debug("Get new job :{}", JSON.toJSONString(jobPushRequest.getJobMetaList()));
-                                    }
-                                    if (CollectionUtils.isNotEmpty(jobPushRequest.getJobMetaList())) {
-                                        returnResponse.setJobMeta(jobPushRequest.getJobMetaList().get(0));
-                                    }
-                                }
-                            } else {
-                                if (LOGGER.isInfoEnabled()) {
-                                    LOGGER.info("Job feedback failed, save local files。{}", jobRunResult);
-                                }
-                                try {
-                                    if (isEnableFailStore()) {
-                                        retryScheduler.inSchedule(
-                                                jobRunResult.getJobMeta().getJobId().concat("_") + SystemClock.now(),
-                                                jobRunResult);
-                                    } else {
-                                        LOGGER.error("Send Job Result to JobTracker Error, code={}, jobRunResult={}",
-                                                commandResponse != null ? commandResponse.getCode() : null, JSON.toJSONString(jobRunResult));
-                                    }
+			try {
+				final CountDownLatch latch = new CountDownLatch(1);
+				remotingClient.invokeAsync(request, new AsyncCallback() {
+					@Override
+					public void operationComplete(ResponseFuture responseFuture) {
+						try {
+							RemotingCommand commandResponse = responseFuture.getResponseCommand();
 
-                                } catch (Exception e) {
-                                    LOGGER.error("Job feedback failed", e);
-                                }
-                            }
-                        } finally {
-                            latch.countDown();
-                        }
-                    }
-                });
+							if (commandResponse != null
+									&& commandResponse.getCode() == RemotingProtos.ResponseCode.SUCCESS.code()) {
+								JobPushRequest jobPushRequest = commandResponse.getBody();
+								if (jobPushRequest != null) {
+									if (LOGGER.isDebugEnabled()) {
+										LOGGER.debug("Get new job :{}",
+												JSON.toJSONString(jobPushRequest.getJobMetaList()));
+									}
+									if (CollectionUtils.isNotEmpty(jobPushRequest.getJobMetaList())) {
+										returnResponse.setJobMeta(jobPushRequest.getJobMetaList().get(0));
+									}
+								}
+							} else {
+								if (LOGGER.isInfoEnabled()) {
+									LOGGER.info("Job feedback failed, save local files。{}", jobRunResult);
+								}
+								try {
+									if (isEnableFailStore()) {
+										retryScheduler.inSchedule(
+												jobRunResult.getJobMeta().getJobId().concat("_") + SystemClock.now(),
+												jobRunResult);
+									} else {
+										LOGGER.error("Send Job Result to JobTracker Error, code={}, jobRunResult={}",
+												commandResponse != null ? commandResponse.getCode() : null,
+												JSON.toJSONString(jobRunResult));
+									}
 
-                try {
-                    latch.await(Constants.LATCH_TIMEOUT_MILLIS, TimeUnit.MILLISECONDS);
-                } catch (InterruptedException e) {
-                    throw new RequestTimeoutException(e);
-                }
-            } catch (JobTrackerNotFoundException e) {
-                try {
-                    LOGGER.warn("No job tracker available! save local files.");
+								} catch (Exception e) {
+									LOGGER.error("Job feedback failed", e);
+								}
+							}
+						} finally {
+							latch.countDown();
+						}
+					}
+				});
 
-                    if (isEnableFailStore()) {
-                        retryScheduler.inSchedule(
-                                jobRunResult.getJobMeta().getJobId().concat("_") + SystemClock.now(),
-                                jobRunResult);
-                    } else {
-                        LOGGER.error("Send Job Result to JobTracker Error, server is down, jobRunResult={}", JSON.toJSONString(jobRunResult));
-                    }
-                } catch (Exception e1) {
-                    LOGGER.error("Save files failed, {}", jobRunResult.getJobMeta(), e1);
-                }
-            }
+				try {
+					latch.await(Constants.LATCH_TIMEOUT_MILLIS, TimeUnit.MILLISECONDS);
+				} catch (InterruptedException e) {
+					throw new RequestTimeoutException(e);
+				}
+			} catch (JobTrackerNotFoundException e) {
+				try {
+					LOGGER.warn("No job tracker available! save local files.");
 
-            return returnResponse.getJobMeta();
-        }
-    }
+					if (isEnableFailStore()) {
+						retryScheduler.inSchedule(jobRunResult.getJobMeta().getJobId().concat("_") + SystemClock.now(),
+								jobRunResult);
+					} else {
+						LOGGER.error("Send Job Result to JobTracker Error, server is down, jobRunResult={}",
+								JSON.toJSONString(jobRunResult));
+					}
+				} catch (Exception e1) {
+					LOGGER.error("Save files failed, {}", jobRunResult.getJobMeta(), e1);
+				}
+			}
 
-    private boolean isEnableFailStore() {
-        return !appContext.getConfig().getParameter(ExtConfig.TASK_TRACKER_JOB_RESULT_FAIL_STORE_CLOSE, false);
-    }
+			return returnResponse.getJobMeta();
+		}
+	}
 
-    /**
-     * 发送JobResults
-     */
-    private boolean retrySendJobResults(List<JobRunResult> results) {
-        // 发送消息给 JobTracker
-        JobCompletedRequest requestBody = appContext.getCommandBodyWrapper().wrapper(new JobCompletedRequest());
-        requestBody.setJobRunResults(results);
-        requestBody.setReSend(true);
+	private boolean isEnableFailStore() {
+		return !appContext.getConfig().getParameter(ExtConfig.TASK_TRACKER_JOB_RESULT_FAIL_STORE_CLOSE, false);
+	}
 
-        int requestCode = JobProtos.RequestCode.JOB_COMPLETED.code();
-        RemotingCommand request = RemotingCommand.createRequestCommand(requestCode, requestBody);
+	/**
+	 * 发送JobResults
+	 */
+	private boolean retrySendJobResults(List<JobRunResult> results) {
+		// 发送消息给 JobTracker
+		JobCompletedRequest requestBody = appContext.getCommandBodyWrapper().wrapper(new JobCompletedRequest());
+		requestBody.setJobRunResults(results);
+		requestBody.setReSend(true);
 
-        try {
-            // 这里一定要用同步，不然异步会发生文件锁，死锁
-            RemotingCommand commandResponse = remotingClient.invokeSync(request);
-            if (commandResponse != null && commandResponse.getCode() == RemotingProtos.ResponseCode.SUCCESS.code()) {
-                return true;
-            } else {
-                LOGGER.warn("Send job failed, {}", commandResponse);
-                return false;
-            }
-        } catch (JobTrackerNotFoundException e) {
-            LOGGER.error("Retry send job result failed! jobResults={}", results, e);
-        }
-        return false;
-    }
+		int requestCode = JobProtos.RequestCode.JOB_COMPLETED.code();
+		RemotingCommand request = RemotingCommand.createRequestCommand(requestCode, requestBody);
+
+		try {
+			// 这里一定要用同步，不然异步会发生文件锁，死锁
+			RemotingCommand commandResponse = remotingClient.invokeSync(request);
+			if (commandResponse != null && commandResponse.getCode() == RemotingProtos.ResponseCode.SUCCESS.code()) {
+				return true;
+			} else {
+				LOGGER.warn("Send job failed, {}", commandResponse);
+				return false;
+			}
+		} catch (JobTrackerNotFoundException e) {
+			LOGGER.error("Retry send job result failed! jobResults={}", results, e);
+		}
+		return false;
+	}
 
 }

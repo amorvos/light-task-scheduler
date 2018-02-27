@@ -16,7 +16,7 @@ public interface RemotingClient {
     /**
      * 同步调用
      */
-    RemotingCommand invokeSync(final String addr, final RemotingCommand request,
+    RemotingCommand invokeSync(final String address, final RemotingCommand request,
                                final long timeoutMillis) throws InterruptedException, RemotingConnectException,
             RemotingSendRequestException, RemotingTimeoutException;
 

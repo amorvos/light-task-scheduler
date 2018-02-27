@@ -115,18 +115,18 @@ public abstract class AbstractRemotingClient extends AbstractRemoting implements
 
 	protected abstract void clientShutdown();
 
-	private Channel getAndCreateChannel(final String addr) throws InterruptedException {
+	private Channel getAndCreateChannel(final String address) throws InterruptedException {
 
-		ChannelWrapper cw = this.channelTables.get(addr);
+		ChannelWrapper cw = this.channelTables.get(address);
 		if (cw != null && cw.isConnected()) {
 			return cw.getChannel();
 		}
 
-		return this.createChannel(addr);
+		return this.createChannel(address);
 	}
 
-	private Channel createChannel(final String addr) throws InterruptedException {
-		ChannelWrapper cw = this.channelTables.get(addr);
+	private Channel createChannel(final String address) throws InterruptedException {
+		ChannelWrapper cw = this.channelTables.get(address);
 		if (cw != null && cw.isConnected()) {
 			return cw.getChannel();
 		}
@@ -135,7 +135,7 @@ public abstract class AbstractRemotingClient extends AbstractRemoting implements
 		if (this.lockChannelTables.tryLock(LockTimeoutMillis, TimeUnit.MILLISECONDS)) {
 			try {
 				boolean createNewConnection;
-				cw = this.channelTables.get(addr);
+				cw = this.channelTables.get(address);
 				if (cw != null) {
 					// channel正常
 					if (cw.isConnected()) {
@@ -147,7 +147,7 @@ public abstract class AbstractRemotingClient extends AbstractRemoting implements
 					}
 					// 说明连接不成功
 					else {
-						this.channelTables.remove(addr);
+						this.channelTables.remove(address);
 						createNewConnection = true;
 					}
 				}
@@ -157,10 +157,10 @@ public abstract class AbstractRemotingClient extends AbstractRemoting implements
 				}
 
 				if (createNewConnection) {
-					ChannelFuture channelFuture = connect(RemotingHelper.string2SocketAddress(addr));
-					LOGGER.info("createChannel: begin to connect remote host[{}] asynchronously", addr);
+					ChannelFuture channelFuture = connect(RemotingHelper.string2SocketAddress(address));
+					LOGGER.info("createChannel: begin to connect remote host[{}] asynchronously", address);
 					cw = new ChannelWrapper(channelFuture);
-					this.channelTables.put(addr, cw);
+					this.channelTables.put(address, cw);
 				}
 			} catch (Exception e) {
 				LOGGER.error("createChannel: create channel exception", e);
@@ -176,14 +176,14 @@ public abstract class AbstractRemotingClient extends AbstractRemoting implements
 
 			if (channelFuture.awaitUninterruptibly(this.remotingClientConfig.getConnectTimeoutMillis())) {
 				if (cw.isConnected()) {
-					LOGGER.info("createChannel: connect remote host[{}] success, {}", addr, channelFuture.toString());
+					LOGGER.info("createChannel: connect remote host[{}] success, {}", address, channelFuture.toString());
 					return cw.getChannel();
 				} else {
-					LOGGER.warn("createChannel: connect remote host[" + addr + "] failed, " + channelFuture.toString(),
+					LOGGER.warn("createChannel: connect remote host[" + address + "] failed, " + channelFuture.toString(),
 							channelFuture.cause());
 				}
 			} else {
-				LOGGER.warn("createChannel: connect remote host[{}] timeout {}ms, {}", addr,
+				LOGGER.warn("createChannel: connect remote host[{}] timeout {}ms, {}", address,
 						this.remotingClientConfig.getConnectTimeoutMillis(), channelFuture.toString());
 			}
 		}
@@ -300,25 +300,25 @@ public abstract class AbstractRemotingClient extends AbstractRemoting implements
 	}
 
 	@Override
-	public RemotingCommand invokeSync(String addr, final RemotingCommand request, long timeoutMillis)
+	public RemotingCommand invokeSync(String address, final RemotingCommand request, long timeoutMillis)
 			throws InterruptedException, RemotingConnectException, RemotingSendRequestException,
 			RemotingTimeoutException {
-		final Channel channel = this.getAndCreateChannel(addr);
+		final Channel channel = this.getAndCreateChannel(address);
 		if (channel != null && channel.isConnected()) {
 			try {
 				return this.invokeSyncImpl(channel, request, timeoutMillis);
 			} catch (RemotingSendRequestException e) {
-				LOGGER.warn("invokeSync: send request exception, so close the channel[{}]", addr);
-				this.closeChannel(addr, channel);
+				LOGGER.warn("invokeSync: send request exception, so close the channel[{}]", address);
+				this.closeChannel(address, channel);
 				throw e;
 			} catch (RemotingTimeoutException e) {
-				LOGGER.warn("invokeSync: wait response timeout exception, the channel[{}]", addr);
+				LOGGER.warn("invokeSync: wait response timeout exception, the channel[{}]", address);
 				// 超时异常如果关闭连接可能会产生连锁反应
 				throw e;
 			}
 		} else {
-			this.closeChannel(addr, channel);
-			throw new RemotingConnectException(addr);
+			this.closeChannel(address, channel);
+			throw new RemotingConnectException(address);
 		}
 	}
 
