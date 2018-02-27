@@ -277,28 +277,25 @@ public abstract class AbstractRemoting {
 					once);
 			this.responseTable.put(request.getOpaque(), responseFuture);
 			try {
-				channel.writeAndFlush(request).addListener(new ChannelHandlerListener() {
-					@Override
-					public void operationComplete(Future future) throws Exception {
-						if (future.isSuccess()) {
-							responseFuture.setSendRequestOK(true);
-							return;
-						} else {
-							responseFuture.setSendRequestOK(false);
-						}
+				channel.writeAndFlush(request).addListener(future -> {
+                    if (future.isSuccess()) {
+                        responseFuture.setSendRequestOK(true);
+                        return;
+                    } else {
+                        responseFuture.setSendRequestOK(false);
+                    }
 
-						responseFuture.putResponse(null);
-						try {
-							responseFuture.executeInvokeCallback();
-						} finally {
-							responseFuture.release();
-						}
+                    responseFuture.putResponse(null);
+                    try {
+                        responseFuture.executeInvokeCallback();
+                    } finally {
+                        responseFuture.release();
+                    }
 
-						responseTable.remove(request.getOpaque());
-						LOGGER.warn("send a request command to channel <" + channel.remoteAddress() + "> failed.");
-						LOGGER.warn(request.toString());
-					}
-				});
+                    responseTable.remove(request.getOpaque());
+                    LOGGER.warn("send a request command to channel <" + channel.remoteAddress() + "> failed.");
+                    LOGGER.warn(request.toString());
+                });
 			} catch (Exception e) {
 				once.release();
 				LOGGER.warn("write send a request command to channel <" + channel.remoteAddress() + "> failed.");

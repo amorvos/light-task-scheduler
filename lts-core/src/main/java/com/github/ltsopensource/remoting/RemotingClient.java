@@ -23,7 +23,7 @@ public interface RemotingClient {
     /**
      * 异步调用
      */
-    void invokeAsync(final String addr, final RemotingCommand request, final long timeoutMillis,
+    void invokeAsync(final String address, final RemotingCommand request, final long timeoutMillis,
                      final AsyncCallback asyncCallback) throws InterruptedException, RemotingConnectException,
             RemotingTooMuchRequestException, RemotingTimeoutException, RemotingSendRequestException;
 

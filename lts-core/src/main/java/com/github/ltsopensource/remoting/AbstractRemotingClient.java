@@ -134,7 +134,7 @@ public abstract class AbstractRemotingClient extends AbstractRemoting implements
 		// 进入临界区后，不能有阻塞操作，网络连接采用异步方式
 		if (this.lockChannelTables.tryLock(LockTimeoutMillis, TimeUnit.MILLISECONDS)) {
 			try {
-				boolean createNewConnection = false;
+				boolean createNewConnection;
 				cw = this.channelTables.get(addr);
 				if (cw != null) {
 					// channel正常
@@ -323,21 +323,21 @@ public abstract class AbstractRemotingClient extends AbstractRemoting implements
 	}
 
 	@Override
-	public void invokeAsync(String addr, RemotingCommand request, long timeoutMillis, AsyncCallback asyncCallback)
+	public void invokeAsync(String address, RemotingCommand request, long timeoutMillis, AsyncCallback asyncCallback)
 			throws InterruptedException, RemotingConnectException, RemotingTooMuchRequestException,
 			RemotingTimeoutException, RemotingSendRequestException {
-		final Channel channel = this.getAndCreateChannel(addr);
+		final Channel channel = this.getAndCreateChannel(address);
 		if (channel != null && channel.isConnected()) {
 			try {
 				this.invokeAsyncImpl(channel, request, timeoutMillis, asyncCallback);
 			} catch (RemotingSendRequestException e) {
-				LOGGER.warn("invokeAsync: send request exception, so close the channel[{}]", addr);
-				this.closeChannel(addr, channel);
+				LOGGER.warn("invokeAsync: send request exception, so close the channel[{}]", address);
+				this.closeChannel(address, channel);
 				throw e;
 			}
 		} else {
-			this.closeChannel(addr, channel);
-			throw new RemotingConnectException(addr);
+			this.closeChannel(address, channel);
+			throw new RemotingConnectException(address);
 		}
 	}
 
